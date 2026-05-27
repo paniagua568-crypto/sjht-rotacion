@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SJHT">
+<meta name="theme-color" content="#0D3B6E">
+<link rel="manifest" id="mf-link">
+<title>SJHT — Simulador v5</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+<style>
+:root{--navy:#0D3B6E;--teal:#0D7A8A;--green:#145A32;--red:#922B21;--m3:#1A6BBF;--m4:#0F6E56;--po:#854F0B;--pe:#6C3483;--mal:#B7410E;--bg:#F0F4F8;--card:#fff;--bdr:#DDE3EC;--text:#1A1A2E;--muted:#6B7280;--lt:#EEF2F7;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;color:var(--text);padding-bottom:env(safe-area-inset-bottom);}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:12px;}
+.overlay.hidden{display:none;}
+.modal{background:var(--card);border-radius:16px;padding:20px 18px;width:320px;max-width:100%;max-height:92vh;overflow-y:auto;}
+.mh2{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:5px;}
+.mp{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
+.fl{font-size:11px;font-weight:600;color:var(--navy);display:block;margin-bottom:3px;margin-top:9px;}
+.fi{width:100%;padding:9px 11px;border:1.5px solid var(--bdr);border-radius:8px;font-size:12px;color:var(--text);background:var(--card);}
+.fi:focus{outline:none;border-color:var(--teal);}
+.fs{width:100%;padding:9px 11px;border:1.5px solid var(--bdr);border-radius:8px;font-size:12px;color:var(--text);background:var(--card);}
+.bok{width:100%;padding:11px;border-radius:8px;background:var(--navy);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;}
+.bok:hover{background:#0a2d56;}
+.mc{width:100%;padding:9px;border-radius:7px;border:1.5px solid var(--bdr);background:var(--card);color:var(--muted);font-size:11px;cursor:pointer;margin-top:6px;}
+.micon{width:44px;height:44px;border-radius:50%;background:var(--lt);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.pdots{display:flex;justify-content:center;gap:10px;margin-bottom:12px;}
+.pdot{width:13px;height:13px;border-radius:50%;border:2px solid var(--bdr);background:var(--lt);}
+.pdot.f{background:var(--navy);border-color:var(--navy);}
+.pdot.e{background:var(--red);border-color:var(--red);}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.key{padding:13px;border-radius:9px;border:1.5px solid var(--bdr);background:var(--card);font-size:17px;font-weight:600;cursor:pointer;}
+.key:active{transform:scale(.93);background:#DBEAFE;}
+.key.zero{grid-column:2;}
+.perr{font-size:11px;color:var(--red);min-height:16px;text-align:center;margin-bottom:6px;}
+.lkmsg{background:#FEF2F2;border:1px solid #FECACA;border-radius:7px;padding:9px;font-size:11px;color:var(--red);margin-bottom:10px;text-align:center;}
+.topbar{background:#0a1628;padding:4px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;}
+.sst{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.7);}
+.sdot{width:7px;height:7px;border-radius:50%;background:#6B7280;}
+.sdot.online{background:#10B981;animation:pu 2s infinite;}
+.sdot.offline{background:#EF4444;}
+@keyframes pu{0%,100%{opacity:1;}50%{opacity:.4;}}
+.hdr{background:var(--navy);}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;flex-wrap:wrap;gap:7px;}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+.logo-icon{width:38px;height:38px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.logo-text h1{font-size:13px;font-weight:700;color:#fff;}
+.logo-text p{font-size:9px;color:rgba(255,255,255,.55);}
+.hpill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 11px;font-size:11px;color:#fff;cursor:pointer;}
+.hpill:hover{background:rgba(255,255,255,.2);}
+.auth-strip{background:rgba(0,0,0,.2);padding:6px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;}
+.auth-info{display:flex;align-items:center;gap:8px;}
+.auth-av{width:24px;height:24px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+.auth-txt strong{font-size:11px;color:#fff;display:block;}
+.auth-txt span{font-size:9px;color:rgba(255,255,255,.65);}
+.auth-acts{display:flex;gap:6px;}
+.abtn{padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:10px;cursor:pointer;}
+.abtn:hover{background:rgba(255,255,255,.15);}
+.rchip{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;}
+.rc-a{background:#D1FAE5;color:#065F46;}
+.rc-s{background:#DBEAFE;color:#1E40AF;}
+.rc-c{background:#FEF3C7;color:#92400E;}
+.tabs-bar{display:flex;background:var(--card);border-bottom:1px solid var(--bdr);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;cursor:pointer;border-bottom:3px solid transparent;}
+.tab.active{color:var(--navy);border-bottom-color:var(--navy);}
+.tab-pane{display:none;padding:10px 10px 40px;max-width:1400px;margin:0 auto;}
+.tab-pane.active{display:block;}
+.datebar{background:var(--card);border-bottom:1px solid var(--bdr);padding:7px 12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.dl2{font-size:12px;font-weight:600;color:var(--navy);}
+.dnbtn{padding:4px 10px;border-radius:6px;border:1px solid var(--bdr);background:var(--card);font-size:11px;cursor:pointer;}
+.dnbtn:hover{background:var(--lt);}
+.ro-banner{background:#FEF3C7;border-bottom:1px solid #FDE68A;padding:5px 14px;font-size:11px;color:#92400E;text-align:center;}
+.notif-bar{position:fixed;top:0;left:0;right:0;z-index:8888;display:flex;flex-direction:column;gap:4px;padding:8px 12px;pointer-events:none;}
+.notif{padding:10px 14px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);pointer-events:all;animation:sIn .3s ease-out;}
+@keyframes sIn{from{transform:translateY(-60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.notif.n-rot{background:#0D3B6E;}.notif.n-lot{background:#145A32;}.notif.n-dl{background:#922B21;}.notif.n-gen{background:#0D7A8A;}
+.notif-x{margin-left:auto;background:none;border:none;color:#fff;cursor:pointer;font-size:14px;}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+@media(max-width:960px){.pgrid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:520px){.pgrid{grid-template-columns:1fr;}}
+.pcard{background:var(--card);border:1.5px solid var(--bdr);border-radius:12px;overflow:hidden;}
+.phdr{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;}
+.ptitle{font-size:12px;font-weight:700;color:#fff;}
+.psub{font-size:9px;color:rgba(255,255,255,.7);}
+.pbadge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.2);color:#fff;}
+.pbody{padding:9px 10px 8px;}
+.pier-dl{display:flex;align-items:center;gap:5px;padding:4px 8px;background:var(--lt);border-radius:6px;margin-bottom:7px;flex-wrap:wrap;}
+.pdl-lbl{font-size:9px;color:var(--muted);}
+.pdl-val{font-size:11px;font-weight:700;color:var(--navy);}
+.pdl-val.warn{color:#D97706;}.pdl-val.exp{color:var(--red);}
+.pdl-btn{font-size:9px;padding:2px 6px;border:1px solid var(--bdr);border-radius:4px;background:var(--card);cursor:pointer;}
+.nb-btn{font-size:9px;padding:2px 7px;border-radius:5px;cursor:pointer;font-weight:600;border:1px solid;margin-left:4px;}
+.nb-btn.on{background:#D1FAE5;color:#065F46;border-color:#A7F3D0;}
+.nb-btn.off{background:var(--lt);color:var(--muted);border-color:var(--bdr);}
+.rqueue{display:flex;flex-direction:column;gap:3px;margin-bottom:7px;min-height:44px;}
+.ri{display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:7px;background:var(--lt);border:1px solid var(--bdr);font-size:10px;}
+.ri.curr{background:var(--navy);color:#fff;border-color:var(--navy);}
+.ri.done{opacity:.35;text-decoration:line-through;}
+.ri.absent{background:#FEF2F2;border-color:#FECACA;color:#B91C1C;opacity:.6;}
+.rinum{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.riname{flex:1;font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ribtn{width:20px;height:20px;border-radius:4px;border:none;background:rgba(0,0,0,.08);font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.ri.curr .ribtn{background:rgba(255,255,255,.2);}
+.pacts{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;}
+.pb{padding:4px 9px;border-radius:6px;border:1.5px solid var(--bdr);background:var(--card);font-size:10px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.pb:hover{background:var(--lt);}
+.pb.go{background:var(--navy);color:#fff;border-color:var(--navy);}
+.pb.lk{opacity:.35;cursor:not-allowed;}
+.pstat{font-size:9px;color:var(--muted);display:flex;gap:8px;}
+.ngrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+@media(max-width:600px){.ngrid{grid-template-columns:1fr;}}
+.ncard{background:var(--card);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;}
+.nhdr{padding:8px 12px;background:var(--lt);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.ntitle{font-size:11px;font-weight:600;color:var(--navy);}
+.nsave{font-size:10px;color:var(--teal);cursor:pointer;font-weight:600;}
+.nbody{padding:9px 12px;}
+.narea{width:100%;min-height:72px;border:1px solid var(--bdr);border-radius:7px;padding:7px 9px;font-size:11px;font-family:inherit;resize:vertical;}
+.narea:focus{outline:none;border-color:var(--teal);}
+.narea[readonly]{background:var(--lt);color:var(--muted);}
+.dnlist{display:flex;flex-direction:column;gap:4px;max-height:150px;overflow-y:auto;}
+.dni{display:flex;gap:7px;align-items:flex-start;padding:5px 7px;background:var(--lt);border-radius:6px;}
+.dnav2{width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.dnn{font-size:10px;font-weight:600;color:var(--navy);}
+.dnt{font-size:10px;color:var(--text);}
+.dntm{font-size:9px;color:var(--muted);}
+.dnarow{display:flex;gap:5px;margin-top:5px;}
+.dnin{flex:1;padding:6px 9px;border:1px solid var(--bdr);border-radius:6px;font-size:11px;}
+.dnin:focus{outline:none;border-color:var(--teal);}
+.dnsub{padding:6px 12px;border-radius:6px;background:var(--navy);color:#fff;border:none;font-size:11px;cursor:pointer;}
+.lsec{background:var(--card);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:8px;}
+.ltabs{display:flex;border-bottom:1px solid var(--bdr);}
+.ltab{flex:1;padding:7px 5px;font-size:10px;font-weight:500;text-align:center;cursor:pointer;color:var(--muted);background:var(--lt);border:none;}
+.ltab.active{background:var(--card);color:var(--navy);font-weight:600;border-bottom:2px solid var(--navy);}
+.lbody{padding:9px 12px;}
+.llist{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+.litem{font-size:10px;padding:4px 7px;background:var(--lt);border-radius:4px;display:flex;gap:5px;}
+.lt2{color:var(--muted);white-space:nowrap;font-size:9px;}
+.lu{font-weight:600;font-size:9px;color:var(--navy);white-space:nowrap;}
+.lm{flex:1;}
+.litem.linfo{border-left:3px solid var(--teal);}
+.litem.ladmin{border-left:3px solid var(--green);}
+.litem.lwarn{border-left:3px solid var(--red);}
+@keyframes fn{0%{background:#FEF9C3;}100%{background:var(--lt);}}
+.litem.new{animation:fn 1.5s ease-out;}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:7px;}
+.cday{padding:6px 4px;border-radius:6px;text-align:center;font-size:11px;cursor:pointer;border:1px solid transparent;}
+.cday:hover{background:var(--lt);}
+.cday.hd{background:#EFF6FF;border-color:#93C5FD;color:var(--m3);font-weight:600;}
+.cday.tod{background:var(--navy);color:#fff;font-weight:700;}
+.cday.sel{border-color:var(--teal);background:#E0F7FA;}
+.cday.om{color:var(--muted);opacity:.4;}
+.cnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.cml{font-size:13px;font-weight:600;color:var(--navy);}
+.cnbtn{padding:4px 10px;border-radius:6px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;}
+.cwds{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;}
+.cwd{text-align:center;font-size:9px;font-weight:600;color:var(--muted);}
+.agrid{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0;}
+.ai{display:flex;align-items:center;gap:4px;padding:4px 7px;border-radius:7px;border:1.5px solid var(--bdr);font-size:10px;cursor:pointer;user-select:none;}
+.ai.sm3{border-color:var(--m3);background:#EFF6FF;color:var(--m3);}
+.ai.sm4{border-color:var(--m4);background:#ECFDF5;color:var(--m4);}
+.ai.spo{border-color:var(--po);background:#FFFBEB;color:var(--po);}
+.ai.spe{border-color:var(--pe);background:#FAF5FF;color:var(--pe);}
+.ai.smal{border-color:var(--mal);background:#FFF5F0;color:var(--mal);}
+.rlist{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;margin:8px 0;}
+.rli{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:7px;border:1px solid var(--bdr);}
+/* LOTTERY */
+.lot-sec{background:var(--card);border:1.5px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.lot-hdr{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;}
+.lot-title{font-size:12px;font-weight:700;color:#fff;}
+.lot-sub{font-size:9px;color:rgba(255,255,255,.7);}
+.lot-body{padding:11px 14px;}
+.balls-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.ball{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;transition:all .13s;border:2px solid transparent;user-select:none;}
+.ball.idle{background:var(--lt);color:var(--text);border-color:var(--bdr);}
+.ball.idle:hover{transform:scale(1.1);}
+.ball.drawn{background:#94A3B8;color:#fff;opacity:.4;cursor:default;}
+.ball.current{background:#F59E0B;color:#fff;transform:scale(1.2);box-shadow:0 0 0 3px rgba(245,158,11,.3);}
+.ball.selected{background:var(--m3);color:#fff;border-color:var(--m3);}
+.ball.unselected-dim{opacity:.3;}
+.lot-results{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;min-height:32px;padding:7px;background:var(--lt);border-radius:7px;overflow-x:auto;}
+.lpos{display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:5px;font-size:11px;font-weight:600;}
+.lpos.p1{background:#FEF9C3;color:#92400E;border:1px solid #FDE68A;}
+.lpos.pn{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;}
+@keyframes bPop{0%{transform:scale(1.4);}100%{transform:scale(1);}}
+.lpos.pnew{animation:bPop .35s ease-out;}
+.lot-ctrl{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;}
+.lbtn{padding:6px 12px;border-radius:7px;border:1.5px solid var(--bdr);background:var(--card);font-size:11px;font-weight:600;cursor:pointer;}
+.lbtn:hover{background:var(--lt);}
+.lbtn.go{background:var(--navy);color:#fff;border-color:var(--navy);}
+.lbtn.stop{background:var(--red);color:#fff;border-color:var(--red);}
+.lbtn:disabled{opacity:.35;cursor:not-allowed;}
+.spd-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:10px;color:var(--muted);}
+.spd-row input[type=range]{flex:1;}
+.lot-cur-ball{width:65px;height:65px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin:0 auto 5px;box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.live-badge{display:inline-flex;align-items:center;gap:4px;background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#10B981;animation:pu 1s infinite;}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+@media(max-width:600px){.admin-grid{grid-template-columns:1fr;}}
+.admin-card{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;}
+.admin-title{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:10px;}
+.nd-sec{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+.nd-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:500px){.nd-cols{grid-template-columns:1fr;}}
+.nd-list{display:flex;flex-wrap:wrap;gap:4px;min-height:30px;padding:6px;background:var(--lt);border-radius:7px;}
+.nd-reg{padding:3px 7px;border-radius:5px;font-size:10px;font-weight:600;background:#EFF6FF;color:var(--m3);border:1px solid #BFDBFE;}
+.nd-mal{padding:3px 7px;border-radius:5px;font-size:10px;font-weight:600;background:#FFF5F0;color:var(--mal);border:1px solid #FECDC9;}
+.ou-bar{background:var(--card);border:1px solid var(--bdr);border-radius:9px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.ou-chip{padding:3px 8px;border-radius:6px;background:var(--lt);border:1px solid var(--bdr);font-size:10px;display:flex;align-items:center;gap:5px;}
+.ou-chip.me{background:#E0F7FA;border-color:var(--teal);}
+.pwa-btn{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));right:16px;background:var(--navy);color:#fff;border:none;border-radius:50%;width:48px;height:48px;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(13,59,110,.4);z-index:100;display:none;align-items:center;justify-content:center;}
+.footer{text-align:center;padding:10px;font-size:9px;color:var(--muted);border-top:1px solid var(--bdr);}
+</style>
+</head>
+<body>
+<div class="notif-bar" id="notif-bar"></div>
+<button class="pwa-btn" id="pwa-btn" onclick="installPWA()" title="Instalar SJHT">⬇</button>
+
+<!-- LOGIN -->
+<div class="overlay" id="ov-login">
+<div class="modal">
+<div class="micon">🚐</div>
+<h2 class="mh2">San Juan Happy Tours</h2>
+<p class="mp">Ingresa tus datos para acceder al simulador.</p>
+<label class="fl">Nombre completo</label>
+<input class="fi" id="ln" placeholder="Ej: William Torres" autocomplete="off">
+<label class="fl">Número de guagua</label>
+<input class="fi" id="lg" placeholder="1 al 53" type="number" min="1" max="53">
+<label class="fl">Posición / Rol</label>
+<select class="fs" id="lr"><option value="chofer">Chofer</option><option value="supervisor">Supervisor</option><option value="supervisor_jefe">Supervisor Jefe</option><option value="vocal">Vocal Junta</option><option value="presidente">Presidente</option></select>
+<label class="fl">Contraseña</label>
+<div style="position:relative;"><input class="fi" id="lpw" type="password" placeholder="Contraseña de acceso" style="padding-right:38px;"><button onclick="document.getElementById('lpw').type=document.getElementById('lpw').type==='password'?'text':'password'" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:13px;color:var(--muted);">👁</button></div>
+<div id="lerr" style="font-size:11px;color:var(--red);margin-top:5px;min-height:15px;"></div>
+<button class="bok" onclick="doLogin()">Entrar ▶</button>
+</div>
+</div>
+
+<!-- PIN -->
+<div class="overlay hidden" id="ov-pin">
+<div class="modal">
+<div class="micon">🔐</div>
+<h2 class="mh2">Acceso Administrador</h2>
+<p class="mp">Introduce tu PIN de 4 dígitos.</p>
+<div id="pin-lk" class="lkmsg" style="display:none;">⛔ Bloqueado. Toca el logo <strong>SJ</strong> 5 veces para reactivar.</div>
+<div class="pdots" id="pdots"><div class="pdot" id="pd0"></div><div class="pdot" id="pd1"></div><div class="pdot" id="pd2"></div><div class="pdot" id="pd3"></div></div>
+<div class="perr" id="perr"></div>
+<div class="keypad" id="kp">
+<button class="key" onclick="pk('1')">1</button><button class="key" onclick="pk('2')">2</button><button class="key" onclick="pk('3')">3</button>
+<button class="key" onclick="pk('4')">4</button><button class="key" onclick="pk('5')">5</button><button class="key" onclick="pk('6')">6</button>
+<button class="key" onclick="pk('7')">7</button><button class="key" onclick="pk('8')">8</button><button class="key" onclick="pk('9')">9</button>
+<button class="key" style="font-size:12px;" onclick="pdel()">⌫</button><button class="key zero" onclick="pk('0')">0</button><button class="key" style="font-size:12px;" onclick="pclr()">✕</button>
+</div>
+<button class="mc" onclick="closeModal('ov-pin')">Cancelar</button>
+</div>
+</div>
+
+<!-- CALENDAR -->
+<div class="overlay hidden" id="ov-cal">
+<div class="modal" style="width:330px;">
+<h2 class="mh2">📅 Seleccionar fecha</h2>
+<div class="cnav"><button class="cnbtn" onclick="calNav(-1)">◀</button><span class="cml" id="cal-ml"></span><button class="cnbtn" onclick="calNav(1)">▶</button></div>
+<div class="cwds"><div class="cwd">D</div><div class="cwd">L</div><div class="cwd">M</div><div class="cwd">X</div><div class="cwd">J</div><div class="cwd">V</div><div class="cwd">S</div></div>
+<div class="calg" id="calg"></div>
+<div style="display:flex;gap:7px;margin-top:10px;"><button class="mc" style="margin-top:0;" onclick="closeModal('ov-cal')">Cancelar</button><button class="bok" style="margin-top:0;" onclick="goToday()">Hoy</button></div>
+</div>
+</div>
+
+<!-- ASSIGN -->
+<div class="overlay hidden" id="ov-assign">
+<div class="modal" style="width:380px;">
+<h2 class="mh2">🚐 Asignar guaguas</h2>
+<p class="mp" id="assign-desc">Selecciona las guaguas.</p>
+<div class="agrid" id="agrid"></div>
+<button class="bok" onclick="saveAssign()">Guardar</button>
+<button class="mc" onclick="closeModal('ov-assign')">Cancelar</button>
+</div>
+</div>
+
+<!-- REORDER -->
+<div class="overlay hidden" id="ov-reorder">
+<div class="modal" style="width:300px;">
+<h2 class="mh2">↕ Ajustar orden</h2>
+<p class="mp" id="reorder-desc">Mueve para cambiar el orden de turno.</p>
+<div class="rlist" id="rlist"></div>
+<p style="font-size:10px;color:var(--muted);">▲▼ para mover · orden = turno</p>
+<button class="bok" onclick="saveReorder()">Confirmar</button>
+<button class="mc" onclick="closeModal('ov-reorder')">Cancelar</button>
+</div>
+</div>
+
+<!-- PIER DEADLINE -->
+<div class="overlay hidden" id="ov-pdl">
+<div class="modal" style="width:280px;">
+<h2 class="mh2">⏱ Deadline — <span id="pdl-name"></span></h2>
+<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;">
+<div class="pb" onclick="document.getElementById('pdl-in').value='08:00'">8:00 AM</div>
+<div class="pb" onclick="document.getElementById('pdl-in').value='11:00'">11 AM</div>
+<div class="pb" onclick="document.getElementById('pdl-in').value='12:00'">12 PM</div>
+<div class="pb" onclick="document.getElementById('pdl-in').value='14:00'">2 PM</div>
+<div class="pb" onclick="document.getElementById('pdl-in').value='16:00'">4 PM</div>
+<div class="pb" onclick="document.getElementById('pdl-in').value='18:00'">6 PM</div>
+</div>
+<input class="fi" type="time" id="pdl-in">
+<button class="bok" onclick="savePierDl()">Guardar deadline</button>
+<button class="mc" onclick="closeModal('ov-pdl')">Cancelar</button>
+</div>
+</div>
+
+<!-- RENAME -->
+<div class="overlay hidden" id="ov-rename">
+<div class="modal" style="width:320px;">
+<h2 class="mh2">✏️ Cambiar nombre de chofer</h2>
+<label class="fl">Guagua</label>
+<select class="fs" id="rn-g" onchange="rnChange()"><option value="">Selecciona...</option></select>
+<label class="fl">Nombre actual</label>
+<input class="fi" id="rn-cur" readonly style="background:var(--lt);">
+<label class="fl">Nuevo nombre</label>
+<input class="fi" id="rn-new" placeholder="Nombre completo">
+<div id="rn-err" style="font-size:11px;color:var(--red);margin-top:5px;min-height:14px;"></div>
+<button class="bok" onclick="saveRename()">Guardar</button>
+<button class="mc" onclick="closeModal('ov-rename')">Cancelar</button>
+</div>
+</div>
+
+<!-- PASSWORD MANAGER -->
+<div class="overlay hidden" id="ov-pw">
+<div class="modal" style="width:360px;">
+<h2 class="mh2">🔑 Gestionar Contraseñas</h2>
+<div style="display:flex;gap:7px;margin-bottom:10px;">
+<select class="fs" id="pw-sel" style="flex:1;" onchange="loadPwInfo()"><option value="">Selecciona guagua...</option></select>
+<button class="pb go" onclick="setPwAll()">Global</button>
+</div>
+<div id="pw-info" style="background:var(--lt);border-radius:7px;padding:8px;margin-bottom:9px;font-size:11px;display:none;"></div>
+<label class="fl">Nueva contraseña</label>
+<input class="fi" id="pw-new" type="password" placeholder="Mínimo 4 caracteres">
+<label class="fl">Confirmar</label>
+<input class="fi" id="pw-cf" type="password" placeholder="Repite la contraseña">
+<div id="pw-err" style="font-size:11px;color:var(--red);margin-top:5px;min-height:14px;"></div>
+<button class="bok" onclick="savePw()">Guardar contraseña</button>
+<button class="mc" onclick="closeModal('ov-pw')">Cerrar</button>
+</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+<div class="sst"><div class="sdot offline" id="sdot"></div><span id="slabel">Conectando...</span></div>
+<div style="display:flex;gap:4px;" id="ou-chips"></div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+<div class="hdr-top">
+<div class="logo" id="logo-el" onclick="logoTap()">
+<div class="logo-icon">SJ</div>
+<div class="logo-text"><h1>SAN JUAN HAPPY TOURS</h1><p>Simulador de Rotación · Tiempo Real · v5.0</p></div>
+</div>
+<div style="display:flex;gap:6px;"><div class="hpill" onclick="openModal('ov-cal');renderCal()">📅 <span id="dpill">—</span></div></div>
+</div>
+<div class="auth-strip">
+<div class="auth-info">
+<div class="auth-av" id="auth-av">?</div>
+<div class="auth-txt"><strong id="auth-name">—</strong><span id="auth-sub">—</span></div>
+</div>
+<div class="auth-acts">
+<span class="rchip" id="auth-chip" style="display:none;"></span>
+<button class="abtn" id="admin-btn" onclick="handleAdminBtn()">🔐 Admin</button>
+<button class="abtn" onclick="changeUser()">↩ Cambiar</button>
+</div>
+</div>
+</div>
+
+<div id="ro-banner" class="ro-banner" style="display:none;">📅 Historial del <span id="rb-date"></span> — Solo lectura</div>
+<div class="datebar">
+<div style="display:flex;align-items:center;gap:5px;">
+<button class="dnbtn" onclick="navDay(-1)">◀</button>
+<span class="dl2" id="date-display">—</span>
+<button class="dnbtn" onclick="navDay(1)">▶</button>
+<button class="dnbtn" onclick="goToday()" style="background:var(--navy);color:#fff;border-color:var(--navy);">Hoy</button>
+</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+<div class="tab active" id="tab-rot" onclick="showTab('rot')">🚐 Rotación</div>
+<div class="tab" id="tab-mal" onclick="showTab('mal')">🧳 Maletas</div>
+<div class="tab" id="tab-lot" onclick="showTab('lot')">🎱 Sorteos</div>
+<div class="tab" id="tab-adm" onclick="showTab('adm')">⚙️ Admin</div>
+</div>
+
+<!-- ╔══ TAB ROTACIÓN ══╗ -->
+<div class="tab-pane active" id="pane-rot">
+<div class="ou-bar"><span style="font-size:10px;font-weight:600;color:var(--muted);">🟢 EN LÍNEA:</span><div id="online-list" style="display:flex;gap:5px;flex-wrap:wrap;"></div><span style="margin-left:auto;font-size:9px;color:var(--muted);" id="online-count">—</span></div>
+<div class="pgrid" id="pgrid-rot"></div>
+<div class="nd-sec">
+<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px;">📋 Rotación próximo día <button class="pb" style="float:right;font-size:9px;" onclick="buildNextDay()">↺ Recalcular</button></div>
+<div class="nd-cols">
+<div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px;">TURNO REGULAR</div><div class="nd-list" id="nd-reg"><span style="font-size:10px;color:var(--muted);">—</span></div></div>
+<div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px;">TURNO MALETAS</div><div class="nd-list" id="nd-mal"><span style="font-size:10px;color:var(--muted);">—</span></div></div>
+</div>
+</div>
+<div class="ngrid">
+<div class="ncard">
+<div class="nhdr"><span class="ntitle">📋 Notas del día</span><div style="display:flex;gap:5px;"><span id="del-dn" class="nsave" onclick="reqDelDN()" style="color:var(--red);display:none;">🗑</span><span class="nsave" onclick="saveNotes()">💾 Guardar</span></div></div>
+<div class="nbody"><textarea class="narea" id="day-notes" placeholder="Notas del día..."></textarea></div>
+</div>
+<div class="ncard">
+<div class="nhdr"><span class="ntitle">👤 Notas por chofer</span><span id="del-drv" class="nsave" onclick="reqDelDrv()" style="color:var(--red);display:none;">🗑 Borrar todo</span></div>
+<div class="nbody"><div class="dnlist" id="dn-list"></div><div class="dnarow"><input class="dnin" id="dn-in" placeholder="Mi nota del día..."><button class="dnsub" onclick="addDrvNote()">+</button></div></div>
+</div>
+</div>
+<div class="lsec">
+<div class="ltabs">
+<button class="ltab active" id="lt-g" onclick="showLog('g')">📋 General</button>
+<button class="ltab" id="lt-s" onclick="showLog('s')">👤 Supervisor</button>
+<button class="ltab" id="lt-a" onclick="showLog('a')">🔐 Auditoría</button>
+</div>
+<div class="lbody">
+<div id="lp-g"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:10px;font-weight:600;color:var(--muted);">ACTIVIDAD</span><span style="font-size:9px;color:var(--muted);" id="lc-g">0</span></div><div class="llist" id="ll-g"></div></div>
+<div id="lp-s" style="display:none;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:10px;font-weight:600;color:var(--muted);">POR SUPERVISOR</span><select id="sup-f" onchange="renderSupLog()" style="font-size:10px;padding:2px 6px;border:1px solid var(--bdr);border-radius:4px;"><option value="">Todos</option></select></div><div class="llist" id="ll-s"></div></div>
+<div id="lp-a" style="display:none;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:10px;font-weight:600;color:var(--muted);">ACCIONES ADMIN</span><span style="font-size:9px;color:var(--muted);" id="lc-a">0</span></div><div class="llist" id="ll-a"></div></div>
+</div>
+</div>
+</div><!-- end pane-rot -->
+
+<!-- ╔══ TAB MALETAS ══╗ -->
+<div class="tab-pane" id="pane-mal">
+<div style="background:#FFF5F0;border:1px solid #FECDC9;border-radius:9px;padding:9px 12px;margin-bottom:10px;font-size:11px;color:var(--mal);">🧳 <strong>Turno de Maletas</strong> — Independiente del turno regular. Disponible en Muelle 4, Panamericano Oeste y Panamericano Este.</div>
+<div class="pgrid" id="pgrid-mal"></div>
+</div>
+
+<!-- ╔══ TAB SORTEOS ══╗ -->
+<div class="tab-pane" id="pane-lot">
+<!-- BOLEO DE BARCO -->
+<div class="lot-sec">
+<div class="lot-hdr" style="background:#0D3B6E;">
+<div><div class="lot-title">🎱 Boleo de Barco</div><div class="lot-sub">Sorteo completo · 53 números · Posiciones 1–53</div></div>
+<div style="display:flex;gap:7px;align-items:center;"><span id="lbb-live" class="live-badge" style="display:none;"><span class="live-dot"></span>EN VIVO</span><span id="lbb-prog" style="font-size:11px;color:rgba(255,255,255,.8);">0/53</span></div>
+</div>
+<div class="lot-body">
+<div class="lot-ctrl">
+<button class="lbtn go" id="lbb-s" onclick="lbbStart()">▶ Iniciar</button>
+<button class="lbtn" id="lbb-n" onclick="lbbNext()" disabled>Sacar número</button>
+<button class="lbtn stop" id="lbb-a" onclick="lbbToggleAuto()">▶▶ Auto</button>
+<button class="lbtn" onclick="lbbReset()">↺ Reiniciar</button>
+</div>
+<div class="spd-row"><span>Velocidad:</span><input type="range" id="lbb-spd" min="200" max="3000" value="1200" step="100" oninput="document.getElementById('lbb-spd-l').textContent=(this.value/1000).toFixed(1)+'s'"><span id="lbb-spd-l">1.2s</span></div>
+<div id="lbb-cur" style="display:none;text-align:center;padding:14px 0;border-bottom:1px solid var(--bdr);margin-bottom:9px;">
+<div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Número en turno:</div>
+<div class="lot-cur-ball" id="lbb-ball" style="background:#F59E0B;"></div>
+<div id="lbb-name" style="font-size:12px;font-weight:600;color:var(--navy);"></div>
+<div id="lbb-pos" style="font-size:10px;color:var(--muted);margin-top:2px;"></div>
+</div>
+<div style="font-size:9px;font-weight:600;color:var(--muted);margin-bottom:5px;">NÚMEROS DISPONIBLES:</div>
+<div class="balls-grid" id="lbb-balls"></div>
+<div style="font-size:9px;font-weight:600;color:var(--muted);margin-bottom:5px;">ORDEN DEL SORTEO:</div>
+<div class="lot-results" id="lbb-res"><span style="font-size:10px;color:var(--muted);">Sorteo no iniciado.</span></div>
+<div style="font-size:9px;color:var(--muted);" id="lbb-stat"></div>
+</div>
+</div>
+
+<!-- BOLEO SOGA DE BARCO -->
+<div class="lot-sec">
+<div class="lot-hdr" style="background:#145A32;">
+<div><div class="lot-title">🎯 Boleo Soga de Barco</div><div class="lot-sub">Grupos privados · Selecciona números · Máx. 25 posiciones</div></div>
+<div style="display:flex;gap:7px;align-items:center;"><span id="lbs-live" class="live-badge" style="display:none;"><span class="live-dot"></span>EN VIVO</span><span id="lbs-prog" style="font-size:11px;color:rgba(255,255,255,.8);">0 sel.</span></div>
+</div>
+<div class="lot-body">
+<div style="font-size:9px;font-weight:600;color:var(--muted);margin-bottom:5px;">PASO 1 — Selecciona participantes:</div>
+<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;">
+<button class="lbtn" onclick="lotSelAll('lbs')">Todos</button>
+<button class="lbtn" onclick="lotClear('lbs')">Ninguno</button>
+<button class="lbtn" onclick="lotRange('lbs')">Rango...</button>
+<span id="lbs-sel" style="font-size:10px;color:var(--muted);align-self:center;">0 seleccionados</span>
+</div>
+<div class="balls-grid" id="lbs-balls"></div>
+<div style="font-size:9px;font-weight:600;color:var(--muted);margin:8px 0 5px;">PASO 2 — Ejecutar sorteo:</div>
+<div class="lot-ctrl">
+<button class="lbtn go" id="lbs-s" onclick="lbsStart()">▶ Iniciar</button>
+<button class="lbtn" id="lbs-n" onclick="lbsNext()" disabled>Sacar número</button>
+<button class="lbtn stop" id="lbs-a" onclick="lbsToggleAuto()">▶▶ Auto</button>
+<button class="lbtn" onclick="lbsReset()">↺ Reiniciar</button>
+</div>
+<div class="spd-row"><span>Velocidad:</span><input type="range" id="lbs-spd" min="200" max="3000" value="1200" step="100" oninput="document.getElementById('lbs-spd-l').textContent=(this.value/1000).toFixed(1)+'s'"><span id="lbs-spd-l">1.2s</span></div>
+<div id="lbs-cur" style="display:none;text-align:center;padding:14px 0;border-bottom:1px solid var(--bdr);margin-bottom:9px;">
+<div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Número en turno:</div>
+<div class="lot-cur-ball" id="lbs-ball" style="background:#0F6E56;"></div>
+<div id="lbs-name" style="font-size:12px;font-weight:600;color:var(--green);"></div>
+<div id="lbs-pos" style="font-size:10px;color:var(--muted);margin-top:2px;"></div>
+</div>
+<div style="font-size:9px;font-weight:600;color:var(--muted);margin-bottom:5px;">RESULTADO:</div>
+<div class="lot-results" id="lbs-res"><span style="font-size:10px;color:var(--muted);">Selecciona números y comienza.</span></div>
+<div style="font-size:9px;color:var(--muted);" id="lbs-stat"></div>
+</div>
+</div>
+
+<!-- BOLEO DE MALETAS -->
+<div class="lot-sec">
+<div class="lot-hdr" style="background:#B7410E;">
+<div><div class="lot-title">🧳 Boleo de Maletas</div><div class="lot-sub">Grupos privados · Selecciona números · Máx. 25 posiciones</div></div>
+<div style="display:flex;gap:7px;align-items:center;"><span id="lbm-live" class="live-badge" style="display:none;"><span class="live-dot"></span>EN VIVO</span><span id="lbm-prog" style="font-size:11px;color:rgba(255,255,255,.8);">0 sel.</span></div>
+</div>
+<div class="lot-body">
+<div style="font-size:9px;font-weight:600;color:var(--muted);margin-bottom:5px;">PASO 1 — Selecciona participantes:</div>
+<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;">
+<button class="lbtn" onclick="lotSelAll('lbm')">Todos</button>
+<button class="lbtn" onclick="lotClear('lbm')">Ninguno</button>
+<button class="lbtn" onclick="lotRange('lbm')">Rango...</button>
+<span id="lbm-sel" style="font-size:10px;color:var(--muted);align-self:center;">0 seleccionados</span>
+</div>
+<div class="balls-grid" id="lbm-balls"></div>
+<div style="font-size:9px;font-weight:600;color:var(--muted);margin:8px 0 5px;">PASO 2 — Ejecutar sorteo:</div>
+<div class="lot-ctrl">
+<button class="lbtn go" id="lbm-s" onclick="lbmStart()" style="background:var(--mal);border-color:var(--mal);">▶ Iniciar</button>
+<button class="lbtn" id="lbm-n" onclick="lbmNext()" disabled>Sacar número</button>
+<button class="lbtn stop" id="lbm-a" onclick="lbmToggleAuto()">▶▶ Auto</button>
+<button class="lbtn" onclick="lbmReset()">↺ Reiniciar</button>
+</div>
+<div class="spd-row"><span>Velocidad:</span><input type="range" id="lbm-spd" min="200" max="3000" value="1200" step="100" oninput="document.getElementById('lbm-spd-l').textContent=(this.value/1000).toFixed(1)+'s'"><span id="lbm-spd-l">1.2s</span></div>
+<div id="lbm-cur" style="display:none;text-align:center;padding:14px 0;border-bottom:1px solid var(--bdr);margin-bottom:9px;">
+<div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Número en turno:</div>
+<div class="lot-cur-ball" id="lbm-ball" style="background:#B7410E;"></div>
+<div id="lbm-name" style="font-size:12px;font-weight:600;color:var(--mal);"></div>
+<div id="lbm-pos" style="font-size:10px;color:var(--muted);margin-top:2px;"></div>
+</div>
+<div style="font-size:9px;font-weight:600;color:var(--muted);margin-bottom:5px;">RESULTADO:</div>
+<div class="lot-results" id="lbm-res"><span style="font-size:10px;color:var(--muted);">Selecciona números y comienza.</span></div>
+<div style="font-size:9px;color:var(--muted);" id="lbm-stat"></div>
+</div>
+</div>
+</div><!-- end pane-lot -->
+
+<!-- ╔══ TAB ADMIN ══╗ -->
+<div class="tab-pane" id="pane-adm">
+<div id="adm-lock" style="background:#FEF2F2;border:1px solid #FECACA;border-radius:9px;padding:14px;text-align:center;margin-bottom:10px;">
+<div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px;">🔒 Acceso de Administrador Requerido</div>
+<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Inicia sesión con tu PIN para acceder.</div>
+<button class="bok" style="width:auto;padding:8px 20px;" onclick="handleAdminBtn()">🔐 Iniciar sesión admin</button>
+</div>
+<div id="adm-content" style="display:none;">
+<div class="admin-grid">
+<div class="admin-card">
+<div class="admin-title">🔧 Controles del día</div>
+<div style="display:flex;flex-direction:column;gap:7px;">
+<button class="pb go" onclick="execAdmin('reset')">🔄 Reiniciar día</button>
+<button class="pb" style="border-color:#fca5a5;color:var(--red);" onclick="execAdmin('clearlog')">🗑 Borrar historial</button>
+<button class="pb" onclick="execAdmin('carryover')">📋 Carryover mañana</button>
+<button class="pb" onclick="buildNextDay()">↺ Recalcular próximo día</button>
+</div>
+</div>
+<div class="admin-card">
+<div class="admin-title">🔔 Notificaciones globales</div>
+<div style="display:flex;flex-direction:column;gap:6px;">
+<button class="pb" onclick="sendNotif('rot','🔄 Cambio de rotación en progreso')">📣 Cambio de rotación</button>
+<button class="pb" onclick="sendNotif('lot','🎱 Sorteo comenzando ahora')">📣 Sorteo comenzando</button>
+<button class="pb" onclick="sendNotif('dl','⏱ Deadline próximo — revisar muelles')">📣 Deadline próximo</button>
+<div style="display:flex;gap:5px;"><input class="fi" id="custom-notif" placeholder="Mensaje..." style="flex:1;padding:5px 8px;font-size:11px;"><button class="pb go" onclick="sendCustomNotif()">Enviar</button></div>
+</div>
+</div>
+<div class="admin-card">
+<div class="admin-title">🔑 Contraseñas</div>
+<div style="display:flex;flex-direction:column;gap:7px;">
+<button class="pb go" onclick="openPwMgr()">🔑 Gestionar</button>
+<button class="pb" onclick="showPwList()">📋 Ver todas</button>
+</div>
+</div>
+<div class="admin-card">
+<div class="admin-title">✏️ Cambiar nombres</div>
+<div style="display:flex;flex-direction:column;gap:7px;">
+<button class="pb go" onclick="openRename()">✏️ Cambiar nombre</button>
+<button class="pb" onclick="resetAllNames()">↺ Restaurar todos</button>
+</div>
+<div id="custom-names" style="margin-top:8px;max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;"></div>
+</div>
+</div>
+<!-- Sorteos control -->
+<div class="admin-card" style="margin-bottom:8px;">
+<div class="admin-title">🎱 Activar / Desactivar Sorteos</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="lot-controls-grid">
+  <div style="background:var(--lt);border-radius:9px;padding:10px 12px;text-align:center;">
+    <div style="font-size:11px;font-weight:700;color:#0D3B6E;margin-bottom:4px;">🎱 Boleo de Barco</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px;">53 números · Posiciones 1–53</div>
+    <button id="lot-toggle-bb" class="pb go" onclick="toggleLot('bb')" style="width:100%;font-size:11px;">✅ Activo</button>
+  </div>
+  <div style="background:var(--lt);border-radius:9px;padding:10px 12px;text-align:center;">
+    <div style="font-size:11px;font-weight:700;color:#145A32;margin-bottom:4px;">🎯 Boleo Soga de Barco</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px;">Grupos privados · Máx. 25</div>
+    <button id="lot-toggle-bs" class="pb go" onclick="toggleLot('bs')" style="width:100%;font-size:11px;">✅ Activo</button>
+  </div>
+  <div style="background:var(--lt);border-radius:9px;padding:10px 12px;text-align:center;">
+    <div style="font-size:11px;font-weight:700;color:#B7410E;margin-bottom:4px;">🧳 Boleo de Maletas</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px;">Grupos privados · Máx. 25</div>
+    <button id="lot-toggle-bm" class="pb go" onclick="toggleLot('bm')" style="width:100%;font-size:11px;">✅ Activo</button>
+  </div>
+</div>
+</div>
+<!-- Rotation lock -->
+<div class="admin-card" style="margin-bottom:8px;">
+<div class="admin-title">🔒 Bloquear / Desbloquear Rotaciones</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+  <div style="background:var(--lt);border-radius:9px;padding:10px 12px;text-align:center;">
+    <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:3px;">🚐 Rotación Regular</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px;">M3 · M4 · Pan. Oeste · Pan. Este</div>
+    <button id="rot-lock-reg" class="pb go" onclick="toggleRotLock('reg')" style="width:100%;font-size:11px;">🔓 Desbloqueada</button>
+  </div>
+  <div style="background:var(--lt);border-radius:9px;padding:10px 12px;text-align:center;">
+    <div style="font-size:11px;font-weight:700;color:var(--mal);margin-bottom:3px;">🧳 Rotación Maletas</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:8px;">M4 · Pan. Oeste · Pan. Este</div>
+    <button id="rot-lock-mal" class="pb go" onclick="toggleRotLock('mal')" style="width:100%;font-size:11px;">🔓 Desbloqueada</button>
+  </div>
+</div>
+</div>
+<!-- Deadlines summary -->
+<div class="admin-card" style="margin-bottom:8px;">
+<div class="admin-title">⏱ Deadlines por muelle</div>
+<div id="all-dls" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;"></div>
+</div>
+</div>
+</div><!-- end pane-adm -->
+
+<div class="footer">San Juan Happy Tours (SJHT) · Simulador v5.0 · Tiempo Real · 2026</div>
+
+<script>
+// ═══ CONFIG ═══════════════════════════════════════════════════
+const FB={apiKey:"AIzaSyDfFTIzJ2pwK35svXn1HY9BTeZ0ILv3d2A",authDomain:"sjht-rotacion.firebaseapp.com",databaseURL:"https://sjht-rotacion-default-rtdb.firebaseio.com",projectId:"sjht-rotacion",storageBucket:"sjht-rotacion.firebasestorage.app",messagingSenderId:"839485293782",appId:"1:839485293782:web:6111e4933c3e7f08b67577"};
+const ADMINS={"7894":{name:"Kenny Ríos",role:"Presidente",guagua:"12"},"7510":{name:"Christopher Vélez",role:"Vocal #19",guagua:"19"}};
+const REACT="SJHT2026";
+const PIERS_ROT=[{id:"m3",label:"Muelle 3",sub:"Viejo San Juan",cls:"m3",col:"#1A6BBF"},{id:"m4",label:"Muelle 4",sub:"Viejo San Juan",cls:"m4",col:"#0F6E56"},{id:"po",label:"Pan. Oeste",sub:"Isla Grande",cls:"po",col:"#854F0B"},{id:"pe",label:"Pan. Este",sub:"Isla Grande",cls:"pe",col:"#6C3483"}];
+const PIERS_MAL=[{id:"m4m",label:"Muelle 4",sub:"Maletas",cls:"m4",col:"#B7410E"},{id:"pom",label:"Pan. Oeste",sub:"Maletas",cls:"po",col:"#B7410E"},{id:"pem",label:"Pan. Este",sub:"Maletas",cls:"pe",col:"#B7410E"}];
+const ALL_PIERS=[...PIERS_ROT,...PIERS_MAL];
+const MONTHS=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DAYS=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const BASE_NOM=["Raúl Hernández","José Quiñones","Juan Rampola","Omar Rodríguez","Ronnie Rivera","José Jiménez","Rubén Ramos","Sammy De la Rosa","Agustín Ramos","Javier Guzmán","Orlando Cartagena","Kenny Ríos","Roberto Rampola","Joel Rodríguez","Anthony Rivera","J.C. Flores","F. Negrón Jr.","Ricardo Rivas","Christopher Vélez","Debbie Mellman","Rubén Negrón","Orlando Enríquez","Roger Frías","María Vega","Albert Aguirre","José Then","Antonio Sánchez","Steven Telvi","Anthony Negrón","Carlos Ortiz","Rodney Soler","Ángel Bula","Edwin Santos","Herman Martínez","Robert Bertrán","Santos Agosto","William Torres","Edwin Betancourt","Félix Rivera","James López","Albert Pérez","Nelson Oliveras","R. Rosado Reyes","Edgardo Capeles","Walter De León","María Villalta","Von Betancourt","José Fantauzzi","Alicia Torregrosa","Gabriel Ortiz","Robert Talavera","Miguel Sabalier","Francisco Rampolla"];
+let NOM=[...BASE_NOM];
+// ═══ STATE ════════════════════════════════════════════════════
+let db=null,me=null,adminUser=null;
+let myUID="u_"+Date.now()+"_"+Math.random().toString(36).substr(2,5);
+let curDate=todayStr(),isRO=false;
+let pinBuf="",pendAct=null,pinAttempts=0,isLocked=false;
+let ltapC=0,ltapT=null;
+let activeLog="g";
+let ps={};ALL_PIERS.forEach(p=>{ps[p.id]={assigned:[],queue:[],ci:-1,started:false,absent:[]};});
+let pierDLs={},pierNotifs={};ALL_PIERS.forEach(p=>{pierNotifs[p.id]=false;});
+let calD=new Date(),calDates=new Set();
+let assignPier=null,assignSel=[];
+let reorderPier=null,reorderQ=[];
+let pdlPier=null,dlTickers={};
+let deferredPrompt=null;
+// ═══ UTILS ════════════════════════════════════════════════════
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+S(d.getMonth()+1)+"-"+S(d.getDate());}
+function S(n){return String(n).padStart(2,"0");}
+function fmtDate(s){const[y,m,d]=s.split("-");const dt=new Date(y,m-1,d);return DAYS[dt.getDay()]+", "+d+" de "+MONTHS[m-1]+" de "+y;}
+function nowT(){const d=new Date();return S(d.getHours())+":"+S(d.getMinutes());}
+function dateRef(){return "sjht/days/"+curDate;}
+function canEdit(){return !isRO&&me!==null;}
+function isAdmin(){return adminUser!==null;}
+function isPresidente(){return adminUser&&adminUser.role==="Presidente";}
+function rolLabel(r){return{chofer:"Chofer",supervisor:"Supervisor",supervisor_jefe:"Supervisor Jefe",vocal:"Vocal Junta",presidente:"Presidente"}[r]||r;}
+function openModal(id){document.getElementById(id).classList.remove("hidden");}
+function closeModal(id){document.getElementById(id).classList.add("hidden");}
+function getName(n){return NOM[n-1]||BASE_NOM[n-1]||"Chofer #"+n;}
+// ═══ PWA ══════════════════════════════════════════════════════
+const mfData={name:"San Juan Happy Tours",short_name:"SJHT",description:"Simulador Rotación SJHT",start_url:"./",display:"standalone",background_color:"#0D3B6E",theme_color:"#0D3B6E",icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%230D3B6E'/%3E%3Ctext x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-family='system-ui' font-weight='700' font-size='72' fill='white'%3ESJ%3C/text%3E%3C/svg%3E",sizes:"192x192",type:"image/svg+xml"}]};
+document.getElementById("mf-link").href=URL.createObjectURL(new Blob([JSON.stringify(mfData)],{type:"application/json"}));
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;document.getElementById("pwa-btn").style.display="flex";});
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById("pwa-btn").style.display="none";});}}
+// ═══ LOGIN ════════════════════════════════════════════════════
+function doLogin(){
+  const n=document.getElementById("ln").value.trim();
+  const g=document.getElementById("lg").value.trim();
+  const r=document.getElementById("lr").value;
+  const pw=document.getElementById("lpw").value;
+  const err=document.getElementById("lerr");
+  err.textContent="";
+  if(!n){err.textContent="Ingresa tu nombre.";return;}
+  if(!g||isNaN(g)||+g<1||+g>53){err.textContent="Número de guagua debe ser 1–53.";return;}
+  if(!pw){err.textContent="Ingresa tu contraseña.";return;}
+  err.textContent="Verificando...";
+  db.ref("sjht/passwords/"+String(+g)).once("value",snap=>{
+    const stored=snap.val();
+    if(stored===null){err.textContent="";me={name:n,guagua:String(+g),rol:r};closeModal("ov-login");updateAuth();registerPresence();addAuditLogin("Primera sesión (sin contraseña) — #"+g+" "+n);setTimeout(()=>alert("⚠️ Sin contraseña asignada. Contacta al administrador."),300);}
+    else if(stored===hashPw(pw)){err.textContent="";me={name:n,guagua:String(+g),rol:r};closeModal("ov-login");updateAuth();registerPresence();addAuditLogin("Acceso correcto — "+n+" (#"+g+")");}
+    else{err.textContent="❌ Contraseña incorrecta.";addAuditLogin("Acceso fallido — #"+g+" "+n);}
+  });
+}
+function hashPw(pw){let h=0;for(let i=0;i<pw.length;i++){h=((h<<5)-h)+pw.charCodeAt(i);h|=0;}return"h"+Math.abs(h).toString(36);}
+function addAuditLogin(msg){if(!db)return;db.ref("sjht/days/"+todayStr()+"/audit").push({msg,type:"warn",ts:Date.now(),time:nowT(),user:"Sistema"});}
+function changeUser(){if(db)db.ref("sjht/users/"+myUID).remove();me=null;adminUser=null;updateAuth();openModal("ov-login");}
+function updateAuth(){
+  if(!me)return;
+  db.ref("sjht/names").once("value",s=>{const d=s.val()||{};for(let i=1;i<=53;i++){NOM[i-1]=d[i]||BASE_NOM[i-1];}ALL_PIERS.forEach(p=>renderPier(p.id));});
+  document.getElementById("auth-av").textContent=me.name.charAt(0);
+  document.getElementById("auth-name").textContent=me.name+" · Guagua #"+me.guagua;
+  document.getElementById("auth-sub").textContent=rolLabel(me.rol);
+  const chip=document.getElementById("auth-chip");chip.style.display="";
+  if(adminUser){chip.className="rchip rc-a";chip.textContent="✓ ADMIN";document.getElementById("admin-btn").textContent="🔓 Cerrar";document.getElementById("adm-lock").style.display="none";document.getElementById("adm-content").style.display="";showDelBtns();loadCustomNames();renderAllDls();}
+  else{chip.className="rchip "+(me.rol==="chofer"?"rc-c":"rc-s");chip.textContent=rolLabel(me.rol);document.getElementById("admin-btn").textContent="🔐 Admin";document.getElementById("adm-lock").style.display="";document.getElementById("adm-content").style.display="none";hideDelBtns();}
+}
+function showDelBtns(){if(isPresidente()){document.getElementById("del-dn").style.display="";document.getElementById("del-drv").style.display="";}}
+function hideDelBtns(){document.getElementById("del-dn").style.display="none";document.getElementById("del-drv").style.display="none";}
+// ═══ PIN ══════════════════════════════════════════════════════
+function handleAdminBtn(){if(adminUser){addAudit("Sesión admin cerrada");adminUser=null;updateAuth();}else openPin("login");}
+function openPin(act){pendAct=act;pinBuf="";document.getElementById("perr").textContent="";updatePD();openModal("ov-pin");document.getElementById("pin-lk").style.display=isLocked?"":"none";document.getElementById("kp").style.cssText=isLocked?"opacity:.3;pointer-events:none;":"";}
+function closePin(){closeModal("ov-pin");pinBuf="";pendAct=null;updatePD();}
+function pk(k){if(isLocked||pinBuf.length>=4)return;pinBuf+=k;updatePD();if(pinBuf.length===4)setTimeout(checkPin,120);}
+function pdel(){if(pinBuf.length>0){pinBuf=pinBuf.slice(0,-1);updatePD();}}
+function pclr(){pinBuf="";updatePD();document.getElementById("perr").textContent="";}
+function updatePD(){for(let i=0;i<4;i++)document.getElementById("pd"+i).className="pdot"+(i<pinBuf.length?" f":"");}
+function checkPin(){
+  const a=ADMINS[pinBuf];
+  if(a){pinAttempts=0;adminUser={...a};updateAuth();closePin();addAudit("Admin autenticado: "+a.name);if(pendAct&&pendAct!=="login")execAdmin(pendAct);}
+  else{pinAttempts++;for(let i=0;i<4;i++)document.getElementById("pd"+i).className="pdot e";addAudit("PIN incorrecto intento "+pinAttempts+"/5 por "+(me?me.name+" #"+me.guagua:"?"));if(pinAttempts>=5){isLocked=true;document.getElementById("pin-lk").style.display="";document.getElementById("kp").style.cssText="opacity:.3;pointer-events:none;";document.getElementById("perr").textContent="BLOQUEADO";}else{document.getElementById("perr").textContent="Incorrecto · "+(5-pinAttempts)+" restante(s)";setTimeout(()=>{pinBuf="";updatePD();},700);}}
+}
+function reqAdmin(act){if(adminUser)execAdmin(act);else{pendAct=act;openPin(act);}}
+function execAdmin(act){
+  const w=adminUser?adminUser.name:"?";
+  if(act==="reset"){if(!confirm("Reiniciar el día completo?"))return;resetDay();addAudit("REINICIO por "+w);}
+  else if(act==="clearlog"){if(!isPresidente()){alert("Solo el Presidente puede borrar el historial.");return;}if(!confirm("Borrar historial?"))return;db.ref(dateRef()+"/log").remove();db.ref(dateRef()+"/audit").remove();addAudit("HISTORIAL BORRADO por "+w);}
+  else if(act==="carryover")showCarryover();
+}
+function logoTap(){ltapC++;clearTimeout(ltapT);if(ltapC>=5){ltapC=0;if(isLocked){const c=prompt("Código de reactivación:");if(c&&c.trim()===REACT){isLocked=false;pinAttempts=0;document.getElementById("pin-lk").style.display="none";document.getElementById("kp").style.cssText="";addAudit("Sistema reactivado");alert("Sistema reactivado.");}else if(c!==null)alert("Código incorrecto.");}return;}ltapT=setTimeout(()=>{ltapC=0;},2000);}
+// ═══ TABS ═════════════════════════════════════════════════════
+function showTab(t){["rot","mal","lot","adm"].forEach(x=>{document.getElementById("tab-"+x).className="tab"+(x===t?" active":"");document.getElementById("pane-"+x).className="tab-pane"+(x===t?" active":"");});}
+// ═══ FIREBASE INIT ════════════════════════════════════════════
+function initApp(){
+  firebase.initializeApp(FB);db=firebase.database();
+  db.ref(".info/connected").on("value",s=>{const c=s.val();document.getElementById("sdot").className="sdot "+(c?"online":"offline");document.getElementById("slabel").textContent=c?"Conectado · Tiempo real":"Sin conexión";});
+  listenPresence();listenNotifications();listenLotEnabled();listenRotLock();loadDate(curDate);loadCalMeta();
+}
+function registerPresence(){
+  if(!db||!me)return;
+  const r=db.ref("sjht/users/"+myUID);
+  r.set({name:me.name,guagua:me.guagua,rol:me.rol,ts:firebase.database.ServerValue.TIMESTAMP});
+  r.onDisconnect().remove();
+  setInterval(()=>r.update({ts:firebase.database.ServerValue.TIMESTAMP}),30000);
+}
+function listenPresence(){
+  db.ref("sjht/users").on("value",snap=>{
+    const data=snap.val()||{},now=Date.now();
+    const active=Object.entries(data).filter(([id,u])=>(now-(u.ts||0))<90000);
+    document.getElementById("online-count").textContent=active.length+" conectado"+(active.length!==1?"s":"");
+    const cols=["#1A6BBF","#0F6E56","#854F0B","#6C3483","#0D7A8A","#922B21"];
+    document.getElementById("online-list").innerHTML=active.map(([id,u],i)=>`<div class="ou-chip${id===myUID?" me":""}"><div style="width:18px;height:18px;border-radius:50%;background:${cols[i%cols.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;">${(u.name||"?").charAt(0)}</div><span style="font-size:10px;">${(u.name||"?").split(" ")[0]}${id===myUID?" (tú)":""}</span><div style="width:5px;height:5px;border-radius:50%;background:#10B981;"></div></div>`).join("");
+    document.getElementById("ou-chips").innerHTML=active.slice(0,3).map(([id,u])=>`<div class="ou-chip${id===myUID?" me":""}" style="padding:2px 7px;font-size:9px;">${(u.name||"?").split(" ")[0]}</div>`).join("")+(active.length>3?`<div style="padding:2px 7px;font-size:9px;background:rgba(255,255,255,.15);border-radius:10px;color:#fff;">+${active.length-3}</div>`:"");
+  });
+}
+// ═══ NOTIFICATIONS ════════════════════════════════════════════
+function listenNotifications(){
+  db.ref("sjht/notifications").limitToLast(1).on("child_added",snap=>{
+    const n=snap.val();if(!n)return;
+    if(Date.now()-n.ts>15000)return;
+    if(n.sender===myUID)return;
+    showNotif(n.msg,n.type||"n-gen");
+  });
+}
+function sendNotif(type,msg){
+  db.ref("sjht/notifications").push({msg,type:"n-"+type,ts:Date.now(),sender:myUID,by:me?me.name:"?"});
+  addLog("Notificación enviada: "+msg,"info");
+  showNotif(msg,"n-"+type);
+}
+function sendCustomNotif(){const msg=document.getElementById("custom-notif").value.trim();if(!msg)return;sendNotif("gen",msg);document.getElementById("custom-notif").value="";}
+function showNotif(msg,type){
+  const bar=document.getElementById("notif-bar");
+  const div=document.createElement("div");
+  div.className="notif "+(type||"n-gen");
+  div.innerHTML=`<span>${msg}</span><button class="notif-x" onclick="this.parentElement.remove()">✕</button>`;
+  bar.appendChild(div);
+  setTimeout(()=>{if(div.parentElement)div.remove();},8000);
+}
+function togglePierNotif(pid){
+  pierNotifs[pid]=!pierNotifs[pid];
+  const btn=document.getElementById("pnb-"+pid);
+  if(btn){btn.className="nb-btn "+(pierNotifs[pid]?"on":"off");btn.textContent=pierNotifs[pid]?"🔔 ON":"🔔 OFF";}
+}
+// ═══ DATE ════════════════════════════════════════════════════
+function navDay(d){const dt=new Date(curDate+"T12:00:00");dt.setDate(dt.getDate()+d);const s=dt.getFullYear()+"-"+S(dt.getMonth()+1)+"-"+S(dt.getDate());loadDate(s);}
+function goToday(){loadDate(todayStr());closeModal("ov-cal");}
+function loadDate(str){
+  curDate=str;const today=todayStr();isRO=str<today;
+  document.getElementById("dpill").textContent=str;
+  document.getElementById("date-display").textContent=fmtDate(str);
+  const rb=document.getElementById("ro-banner");
+  if(isRO){rb.style.display="";document.getElementById("rb-date").textContent=fmtDate(str);}else rb.style.display="none";
+  if(db){db.ref(dateRef()).off();listenDate();}
+  Object.values(dlTickers).forEach(clearInterval);dlTickers={};
+}
+function listenDate(){
+  const base=dateRef();
+  ALL_PIERS.forEach(p=>{
+    db.ref(base+"/piers/"+p.id).on("value",snap=>{
+      const d=snap.val();
+      if(d){ps[p.id]={assigned:d.assigned||[],queue:d.queue||[],ci:d.ci!==undefined?d.ci:-1,started:d.started||false,absent:d.absent||[]};}
+      else{ps[p.id]={assigned:[],queue:[],ci:-1,started:false,absent:[]};tryCarryover(p.id);}
+      renderPier(p.id);
+    });
+    db.ref(base+"/deadlines/"+p.id).on("value",snap=>{pierDLs[p.id]=snap.val();updatePierDLDisplay(p.id);if(isAdmin())renderAllDls();});
+  });
+  db.ref(base+"/notes/day").on("value",s=>{const v=s.val()||"";document.getElementById("day-notes").value=v;document.getElementById("day-notes").readOnly=isRO;});
+  db.ref(base+"/notes/drivers").on("value",s=>renderDN(s.val()||{}));
+  db.ref(base+"/log").limitToLast(80).on("value",s=>{const e=Object.values(s.val()||{}).sort((a,b)=>b.ts-a.ts);renderLL("ll-g","lc-g",e);renderSupFilter(e);renderSupLog();});
+  db.ref(base+"/audit").limitToLast(50).on("value",s=>{renderLL("ll-a","lc-a",Object.values(s.val()||{}).sort((a,b)=>b.ts-a.ts));});
+  listenLotState("bb");listenLotState("bs");listenLotState("bm");
+}
+function tryCarryover(pid){
+  const d=new Date(curDate+"T12:00:00");const tries=[];
+  for(let i=1;i<=7;i++){const dd=new Date(d);dd.setDate(dd.getDate()-i);const s=dd.getFullYear()+"-"+S(dd.getMonth()+1)+"-"+S(dd.getDate());tries.push(db.ref("sjht/days/"+s+"/piers/"+pid+"/carryover").once("value").then(x=>({v:x.val()})));}
+  Promise.all(tries).then(res=>{const f=res.find(r=>r.v&&r.v.length>0);if(f&&f.v&&ps[pid].assigned.length===0){ps[pid].assigned=[...f.v];ps[pid].queue=[...f.v];ps[pid].ci=0;renderPier(pid);}});
+}
+function pushPier(id){
+  if(!db||isRO)return;
+  const p=ps[id];
+  db.ref(dateRef()+"/piers/"+id).set({assigned:p.assigned,queue:p.queue,ci:p.ci,started:p.started,absent:p.absent||[],carryover:buildCarryover(id)});
+}
+function buildCarryover(id){const q=ps[id].queue;const ci=Math.max(0,ps[id].ci);return[...q.slice(ci),...q.slice(0,ci)];}
+function addLog(msg,type){if(!db)return;db.ref(dateRef()+"/log").push({msg,type:type||"info",ts:Date.now(),time:nowT(),user:me?me.name+" · #"+me.guagua:"Sistema"});}
+function addAudit(msg){if(!db)return;db.ref(dateRef()+"/audit").push({msg,type:"admin",ts:Date.now(),time:nowT(),user:adminUser?adminUser.name:(me?me.name+" · #"+me.guagua:"Sistema")});}
+function loadCalMeta(){db.ref("sjht/days").once("value",s=>{calDates=new Set(Object.keys(s.val()||{}));});}
+// ═══ PIER CARDS ══════════════════════════════════════════════
+function buildPierCards(piersArr,gridId){
+  document.getElementById(gridId).innerHTML=piersArr.map(p=>`
+  <div class="pcard" id="pc-${p.id}">
+    <div class="phdr" style="background:${p.col};">
+      <div><div class="ptitle">${p.label}</div><div class="psub">${p.sub}</div></div>
+      <span class="pbadge" id="pb-${p.id}">—</span>
+    </div>
+    <div class="pbody">
+      <div class="pier-dl">
+        <span class="pdl-lbl">Deadline:</span>
+        <span class="pdl-val" id="pdl-${p.id}">No fijado</span>
+        <button class="pdl-btn" onclick="openPierDl('${p.id}','${p.label}')">⏱</button>
+        <button class="nb-btn off" id="pnb-${p.id}" onclick="togglePierNotif('${p.id}')">🔔 OFF</button>
+      </div>
+      <div class="pacts">
+        <button class="pb go" onclick="pierNext('${p.id}')">▶ Turno</button>
+        <button class="pb" onclick="openAssign('${p.id}','${p.label}','${p.cls}')">+ Asignar</button>
+        <button class="pb" onclick="openReorder('${p.id}','${p.label}')">↕ Orden</button>
+      </div>
+      <div class="rqueue" id="rq-${p.id}"></div>
+      <div class="pstat" id="rstat-${p.id}"></div>
+    </div>
+  </div>`).join("");
+}
+function renderPier(id){
+  const p=ps[id];const pier=ALL_PIERS.find(x=>x.id===id);if(!pier)return;
+  const badge=document.getElementById("pb-"+id);if(badge)badge.textContent=p.assigned.length+" guagua"+(p.assigned.length!==1?"s":"");
+  const qEl=document.getElementById("rq-"+id);if(!qEl)return;
+  if(!p.queue.length){qEl.innerHTML=`<div style="font-size:10px;color:var(--muted);padding:7px;text-align:center;">Sin guaguas.<br>Usa "+ Asignar".</div>`;const rs=document.getElementById("rstat-"+id);if(rs)rs.innerHTML="";return;}
+  const ci=p.ci;
+  qEl.innerHTML=p.queue.map((g,i)=>{
+    const name=getName(+g).split(" ")[0];const isCurr=i===ci;const isDone=i<ci&&ci>=0;const isAbs=(p.absent||[]).includes(+g);
+    let cls="ri";if(isAbs)cls+=" absent";else if(isCurr)cls+=" curr";else if(isDone)cls+=" done";
+    return`<div class="${cls}"><div class="rinum" style="${isCurr?"background:rgba(255,255,255,.25);color:#fff;":"background:"+pier.col+"22;color:"+pier.col}">#${g}</div><span class="riname">${name}</span>${!isRO?`<div style="display:flex;gap:2px;"><button class="ribtn" onclick="toggleAbsent('${id}',${+g})">${isAbs?"✓":"✗"}</button><button class="ribtn" onclick="openReorder('${id}','${pier.label}')">↕</button></div>`:""}</div>`;
+  }).join("");
+  const done=Math.max(0,ci);const rs=document.getElementById("rstat-"+id);if(rs)rs.innerHTML=`<span>✓ ${done}</span><span>⏳ ${p.queue.length-done}</span>`;
+}
+// ═══ PIER ACTIONS ════════════════════════════════════════════
+function pierNext(id){
+  if(!canEdit())return;if(isRO){alert("No puedes modificar fechas pasadas.");return;}
+  const isRegPier=['m3','m4','po','pe'].includes(id);
+  const isMalPier=['m4m','pom','pem'].includes(id);
+  if(isRegPier&&rotLocked.reg){alert('🔒 La rotación regular está bloqueada por el administrador.');return;}
+  if(isMalPier&&rotLocked.mal){alert('🔒 La rotación de maletas está bloqueada por el administrador.');return;}
+  const p=ps[id];const pier=ALL_PIERS.find(x=>x.id===id);if(!p.queue.length){alert("Primero asigna guaguas.");return;}
+  const abs=p.absent||[];
+  if(!p.started){p.started=true;p.ci=0;while(p.ci<p.queue.length&&abs.includes(+p.queue[p.ci]))p.ci++;addLog("INICIO rotación "+pier.label+" — "+p.queue.length+" guaguas — "+(me?me.name+" #"+me.guagua:"?"),"info");if(pierNotifs[id])sendNotif("rot","Cambio de rotación: "+pier.label+" — comenzando");}
+  else{const curr=p.queue[p.ci];addLog("Turno: Guagua #"+curr+" — "+getName(+curr).split(" ")[0]+" ("+pier.label+") — "+(me?me.name+" #"+me.guagua:"?"),"info");p.ci++;while(p.ci<p.queue.length&&abs.includes(+p.queue[p.ci]))p.ci++;if(p.ci>=p.queue.length){p.ci=0;while(p.ci<p.queue.length&&abs.includes(+p.queue[p.ci]))p.ci++;addLog("Nueva rotación en "+pier.label,"info");if(pierNotifs[id])sendNotif("rot","Nueva rotación: "+pier.label);}}
+  pushPier(id);renderPier(id);buildNextDay();
+}
+function toggleAbsent(id,gnum){
+  if(!canEdit()||isRO)return;
+  const p=ps[id];if(!p.absent)p.absent=[];
+  const pier=ALL_PIERS.find(x=>x.id===id);
+  if(p.absent.includes(gnum)){p.absent=p.absent.filter(x=>x!==gnum);addLog("Guagua #"+gnum+" reactivada en "+pier.label,"info");}
+  else{p.absent.push(gnum);addLog("Guagua #"+gnum+" ausente en "+pier.label+" — "+(me?me.name:"?"),"info");}
+  pushPier(id);renderPier(id);
+}
+// ═══ ASSIGN ══════════════════════════════════════════════════
+function openAssign(id,label,cls){
+  if(!canEdit())return;assignPier=id;
+  document.getElementById("assign-desc").textContent="Asignar guaguas para "+label;
+  const used={};ALL_PIERS.forEach(op=>{if(op.id!==id)ps[op.id].assigned.forEach(n=>{used[n]=op.label;});});
+  const cur=ps[id].assigned.map(Number);assignSel=[...cur];
+  document.getElementById("agrid").innerHTML=Array.from({length:53},(_,i)=>{const n=i+1;const sel=cur.includes(n);const ub=used[n];return`<div class="ai${sel?" s"+cls:""}" id="ai-${n}" onclick="togA(${n},'${cls}')" title="${ub?"En "+ub:getName(n)}">#${n} ${getName(n).split(" ")[0]}${ub?" ⚠":""}</div>`;}).join("");
+  openModal("ov-assign");
+}
+function togA(n,cls){const i=assignSel.indexOf(n);const el=document.getElementById("ai-"+n);if(i>=0){assignSel.splice(i,1);el.className="ai";}else{assignSel.push(n);el.className="ai s"+cls;}}
+function saveAssign(){
+  const sorted=assignSel.slice().sort((a,b)=>a-b);const p=ps[assignPier];
+  const prev=p.queue.filter(n=>sorted.includes(+n));const newO=sorted.filter(n=>!p.queue.map(Number).includes(n));
+  p.assigned=sorted.map(String);p.queue=[...prev,...newO].map(String);
+  if(p.ci>=p.queue.length)p.ci=Math.max(0,p.queue.length-1);
+  pushPier(assignPier);renderPier(assignPier);
+  addLog("Asignación "+ALL_PIERS.find(x=>x.id===assignPier).label+": "+sorted.map(n=>"#"+n).join(", ")+" — "+(me?me.name+" #"+me.guagua:"?"),"info");
+  closeModal("ov-assign");
+}
+// ═══ REORDER ═════════════════════════════════════════════════
+function openReorder(id,label){if(!canEdit())return;reorderPier=id;reorderQ=[...ps[id].queue];document.getElementById("reorder-desc").textContent="Ajustar orden — "+(label||id);renderRL();openModal("ov-reorder");}
+function renderRL(){const ci=ps[reorderPier].ci;document.getElementById("rlist").innerHTML=reorderQ.map((g,i)=>`<div class="rli" style="background:${i===ci?"var(--navy)":"var(--lt)"};"><span style="flex:1;font-size:11px;color:${i===ci?"#fff":"var(--text)"};">#${g} — ${getName(+g).split(" ")[0]}${i===ci?" ← EN TURNO":""}</span><button onclick="mvItem(${i},-1)" style="padding:3px 8px;border-radius:5px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;"${i===0?" disabled":""}>▲</button><button onclick="mvItem(${i},1)" style="padding:3px 8px;border-radius:5px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;"${i===reorderQ.length-1?" disabled":""}>▼</button></div>`).join("");}
+function mvItem(i,d){const ni=i+d;if(ni<0||ni>=reorderQ.length)return;[reorderQ[i],reorderQ[ni]]=[reorderQ[ni],reorderQ[i]];const p=ps[reorderPier];if(p.ci===i)p.ci=ni;else if(p.ci===ni)p.ci=i;renderRL();}
+function saveReorder(){ps[reorderPier].queue=[...reorderQ];pushPier(reorderPier);renderPier(reorderPier);addLog("Orden ajustado en "+ALL_PIERS.find(x=>x.id===reorderPier).label+" — "+(me?me.name:"?"),"info");closeModal("ov-reorder");}
+// ═══ PIER DEADLINES ══════════════════════════════════════════
+function openPierDl(id,label){pdlPier=id;document.getElementById("pdl-name").textContent=label;document.getElementById("pdl-in").value="";openModal("ov-pdl");}
+function savePierDl(){
+  const t=document.getElementById("pdl-in").value;if(!t)return;
+  db.ref(dateRef()+"/deadlines/"+pdlPier).set(t);
+  const label=ALL_PIERS.find(x=>x.id===pdlPier).label;
+  addLog("Deadline "+label+": "+fmt12(t),"info");
+  sendNotif("dl","Deadline "+label+": "+fmt12(t));
+  closeModal("ov-pdl");
+}
+function fmt12(t){const[h,m]=t.split(":").map(Number);return(h%12||12)+":"+S(m)+" "+(h>=12?"PM":"AM");}
+function updatePierDLDisplay(id){
+  const dl=pierDLs[id];const el=document.getElementById("pdl-"+id);if(!el)return;
+  if(!dl){el.textContent="No fijado";el.className="pdl-val";return;}
+  el.textContent=fmt12(dl);
+  clearInterval(dlTickers[id]);
+  dlTickers[id]=setInterval(()=>{tickDL(id,dl);},30000);
+  tickDL(id,dl);
+}
+function tickDL(id,dl){
+  const el=document.getElementById("pdl-"+id);if(!el)return;
+  const now=new Date();const[h,m]=dl.split(":").map(Number);const dd=new Date(now);dd.setHours(h,m,0,0);const diff=dd-now;
+  if(diff<0){el.className="pdl-val exp";el.textContent=fmt12(dl)+" ⛔";}
+  else if(diff<3600000){el.className="pdl-val warn";el.textContent=fmt12(dl)+" ("+Math.round(diff/60000)+"min)";}
+  else{el.className="pdl-val";el.textContent=fmt12(dl);}
+}
+function renderAllDls(){
+  const el=document.getElementById("all-dls");if(!el)return;
+  el.innerHTML=ALL_PIERS.map(p=>{const dl=pierDLs[p.id];return`<div style="background:var(--lt);border-radius:7px;padding:7px 10px;"><div style="font-size:10px;font-weight:600;color:var(--navy);margin-bottom:3px;">${p.label}</div><div style="font-size:11px;font-weight:700;color:${dl?"var(--navy)":"var(--muted)"};">${dl?fmt12(dl):"—"}</div><button style="font-size:9px;margin-top:3px;padding:2px 7px;border-radius:4px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;" onclick="openPierDl('${p.id}','${p.label}')">Cambiar</button></div>`;}).join("");
+}
+// ═══ RESET / CARRYOVER ═══════════════════════════════════════
+function resetDay(){
+  if(isRO)return;
+  ALL_PIERS.forEach(p=>{const q=ps[p.id].queue;const ci=Math.max(0,ps[p.id].ci);if(q.length>0)db.ref(dateRef()+"/piers/"+p.id+"/carryover").set([...q.slice(ci),...q.slice(0,ci)]);ps[p.id]={assigned:[],queue:[],ci:-1,started:false,absent:[]};db.ref(dateRef()+"/piers/"+p.id).set({assigned:[],queue:[],ci:-1,started:false,absent:[]});renderPier(p.id);});
+}
+function showCarryover(){let msg="CARRYOVER — Inicio de mañana:\n\n";ALL_PIERS.forEach(p=>{const b=buildCarryover(p.id);msg+=p.label+" ("+p.sub+"): "+(b.length?b.map(n=>"#"+n).join(", "):"vacío")+"\n";});alert(msg);}
+function buildNextDay(){
+  const reg=new Set(),mal=new Set();
+  PIERS_ROT.forEach(p=>buildCarryover(p.id).forEach(n=>reg.add(+n)));
+  PIERS_MAL.forEach(p=>buildCarryover(p.id).forEach(n=>mal.add(+n)));
+  const rs=[...reg].sort((a,b)=>a-b),ms=[...mal].sort((a,b)=>a-b);
+  document.getElementById("nd-reg").innerHTML=rs.length?rs.map(n=>`<div class="nd-reg">#${n}</div>`).join(""):"<span style='font-size:10px;color:var(--muted);'>—</span>";
+  document.getElementById("nd-mal").innerHTML=ms.length?ms.map(n=>`<div class="nd-mal">#${n}</div>`).join(""):"<span style='font-size:10px;color:var(--muted);'>—</span>";
+}
+// ═══ NOTES ════════════════════════════════════════════════════
+function saveNotes(){if(isRO||!me)return;db.ref(dateRef()+"/notes/day").set(document.getElementById("day-notes").value);addLog("Notas del día guardadas por "+me.name+" #"+me.guagua,"info");}
+function addDrvNote(){if(isRO||!me)return;const v=document.getElementById("dn-in").value.trim();if(!v)return;db.ref(dateRef()+"/notes/drivers").push({guagua:me.guagua,name:me.name,rol:me.rol,note:v,time:nowT(),ts:Date.now()});addLog("Nota de "+me.name+" #"+me.guagua+": "+v.substring(0,50),"info");document.getElementById("dn-in").value="";}
+function renderDN(data){const el=document.getElementById("dn-list");const e=Object.values(data).sort((a,b)=>b.ts-a.ts);if(!e.length){el.innerHTML="<div style='font-size:10px;color:var(--muted);'>Sin notas aún.</div>";return;}el.innerHTML=e.map(x=>`<div class="dni"><div class="dnav2">${(x.name||"?").charAt(0)}</div><div><div class="dnn">${x.name||"?"} · #${x.guagua||"?"}</div><div class="dnt">${x.note}</div><div class="dntm">${x.time||""}</div></div></div>`).join("");}
+function reqDelDN(){if(!isPresidente()){alert("Solo el Presidente puede borrar notas.");return;}if(!confirm("Borrar notas del día?"))return;db.ref(dateRef()+"/notes/day").remove();document.getElementById("day-notes").value="";addAudit("Notas del día borradas por "+adminUser.name);}
+function reqDelDrv(){if(!isPresidente()){alert("Solo el Presidente puede borrar notas.");return;}if(!confirm("Borrar TODAS las notas de choferes?"))return;db.ref(dateRef()+"/notes/drivers").remove();addAudit("Notas choferes borradas por "+adminUser.name);}
+// ═══ CALENDAR ════════════════════════════════════════════════
+function renderCal(){
+  const m=calD.getMonth(),y=calD.getFullYear(),today=todayStr();
+  document.getElementById("cal-ml").textContent=MONTHS[m]+" "+y;
+  const first=new Date(y,m,1),last=new Date(y,m+1,0);
+  let html="";for(let i=0;i<first.getDay();i++)html+="<div class='cday om'></div>";
+  for(let d=1;d<=last.getDate();d++){const s=y+"-"+S(m+1)+"-"+S(d);let c="cday";if(s===today)c+=" tod";else if(s===curDate)c+=" sel";else if(calDates.has(s))c+=" hd";html+=`<div class="${c}" onclick="calSel('${s}')">${d}</div>`;}
+  document.getElementById("calg").innerHTML=html;
+}
+function calNav(d){calD.setMonth(calD.getMonth()+d);renderCal();}
+function calSel(s){loadDate(s);closeModal("ov-cal");}
+// ═══ LOGS ════════════════════════════════════════════════════
+function showLog(t){["g","s","a"].forEach(x=>{document.getElementById("lt-"+x).className="ltab"+(x===t?" active":"");document.getElementById("lp-"+x).style.display=x===t?"":"none";});}
+const tmap={info:"linfo",admin:"ladmin",warn:"lwarn"};
+function renderLL(elId,cntId,entries){document.getElementById(cntId).textContent=entries.length;document.getElementById(elId).innerHTML=entries.length?entries.map((e,i)=>`<div class="litem ${tmap[e.type]||"linfo"}${i===0?" new":""}"><span class="lt2">${e.time||""}</span><span class="lu">${e.user||"Sistema"}</span><span class="lm">${e.msg}</span></div>`).join(""):"<div style='font-size:10px;color:var(--muted);padding:7px;'>Sin actividad.</div>";}
+function renderSupFilter(e){const sel=document.getElementById("sup-f");const cur=sel.value;const u=[...new Set(e.map(x=>x.user).filter(Boolean))];sel.innerHTML="<option value=''>Todos</option>"+u.map(v=>`<option value="${v}">${v}</option>`).join("");if(cur)sel.value=cur;}
+function renderSupLog(){const f=document.getElementById("sup-f").value;db.ref(dateRef()+"/log").limitToLast(80).once("value",s=>{let e=Object.values(s.val()||{}).sort((a,b)=>b.ts-a.ts);if(f)e=e.filter(x=>x.user===f);document.getElementById("ll-s").innerHTML=e.length?e.map(x=>`<div class="litem ${tmap[x.type]||"linfo"}"><span class="lt2">${x.time||""}</span><span class="lu">${x.user||"Sistema"}</span><span class="lm">${x.msg}</span></div>`).join(""):"<div style='font-size:10px;color:var(--muted);padding:7px;'>Sin datos.</div>";});}
+// ═══ RENAME ══════════════════════════════════════════════════
+function openRename(){if(!isAdmin()){alert("Solo administradores.");return;}const sel=document.getElementById("rn-g");sel.innerHTML="<option value=''>Selecciona...</option>";for(let i=1;i<=53;i++)sel.innerHTML+=`<option value="${i}">#${i} — ${getName(i)}</option>`;document.getElementById("rn-err").textContent="";openModal("ov-rename");}
+function rnChange(){const g=+document.getElementById("rn-g").value;if(g)document.getElementById("rn-cur").value=getName(g);}
+function saveRename(){const g=+document.getElementById("rn-g").value;const n=document.getElementById("rn-new").value.trim();if(!g){document.getElementById("rn-err").textContent="Selecciona guagua.";return;}if(!n){document.getElementById("rn-err").textContent="Ingresa el nuevo nombre.";return;}db.ref("sjht/names/"+g).set(n);NOM[g-1]=n;addAudit("Nombre cambiado: #"+g+" → "+n+" por "+adminUser.name);closeModal("ov-rename");ALL_PIERS.forEach(p=>renderPier(p.id));loadCustomNames();}
+function loadCustomNames(){db.ref("sjht/names").once("value",s=>{const d=s.val()||{};const el=document.getElementById("custom-names");const e=Object.entries(d).sort((a,b)=>+a[0]-+b[0]);el.innerHTML=e.length?e.map(([g,n])=>`<div style="display:flex;align-items:center;gap:7px;padding:4px 7px;background:var(--lt);border-radius:5px;font-size:10px;"><span style="font-weight:600;color:var(--navy);">#${g}</span><span style="flex:1;">${n}</span><button onclick="resetOneName(${g})" style="font-size:9px;padding:1px 6px;border-radius:4px;border:1px solid var(--bdr);background:var(--card);cursor:pointer;">↺</button></div>`).join(""):"<div style='font-size:10px;color:var(--muted);'>Sin cambios.</div>";});}
+function resetOneName(g){if(!isAdmin())return;db.ref("sjht/names/"+g).remove();NOM[g-1]=BASE_NOM[g-1];addAudit("Nombre restaurado: #"+g);loadCustomNames();ALL_PIERS.forEach(p=>renderPier(p.id));}
+function resetAllNames(){if(!isPresidente()){alert("Solo el Presidente.");return;}if(!confirm("Restaurar TODOS los nombres?"))return;db.ref("sjht/names").remove();NOM=[...BASE_NOM];addAudit("Todos los nombres restaurados por "+adminUser.name);loadCustomNames();ALL_PIERS.forEach(p=>renderPier(p.id));}
+// ═══ PASSWORDS ═══════════════════════════════════════════════
+function openPwMgr(){if(!isAdmin())return;const sel=document.getElementById("pw-sel");sel.innerHTML="<option value=''>Selecciona guagua...</option>";for(let i=1;i<=53;i++)sel.innerHTML+=`<option value="${i}">#${i} — ${getName(i)}</option>`;document.getElementById("pw-err").textContent="";document.getElementById("pw-info").style.display="none";openModal("ov-pw");}
+function loadPwInfo(){const g=document.getElementById("pw-sel").value;if(!g){document.getElementById("pw-info").style.display="none";return;}db.ref("sjht/passwords/"+g).once("value",snap=>{const has=snap.val()!==null;document.getElementById("pw-info").style.display="";document.getElementById("pw-info").textContent="#"+g+" — "+getName(+g)+" · "+(has?"✅ Con contraseña":"⚠️ Sin contraseña");});}
+function savePw(){const g=document.getElementById("pw-sel").value;const np=document.getElementById("pw-new").value;const cf=document.getElementById("pw-cf").value;const err=document.getElementById("pw-err");err.textContent="";if(!g){err.textContent="Selecciona guagua.";return;}if(np.length<4){err.textContent="Mínimo 4 caracteres.";return;}if(np!==cf){err.textContent="Las contraseñas no coinciden.";return;}db.ref("sjht/passwords/"+g).set(hashPw(np));addAudit("Contraseña cambiada para #"+g+" por "+adminUser.name);err.textContent="";alert("Contraseña guardada para Guagua #"+g+" — "+getName(+g));}
+function setPwAll(){const pw=prompt("Contraseña global para TODAS las guaguas:");if(!pw||pw.length<4){alert("Mínimo 4 caracteres.");return;}if(!confirm("Cambiar contraseña de las 53 guaguas?"))return;const u={};for(let i=1;i<=53;i++)u["sjht/passwords/"+i]=hashPw(pw);db.ref().update(u);addAudit("Contraseña global aplicada por "+adminUser.name);alert("Contraseña global aplicada.");}
+function showPwList(){db.ref("sjht/passwords").once("value",snap=>{const data=snap.val()||{};const msg=Array.from({length:53},(_,i)=>{const n=i+1;return"#"+n+" "+getName(n).split(" ")[0]+": "+(data[n]?"✅":"⚠️ sin contraseña");}).join("\n");alert("CONTRASEÑAS:\n\n"+msg);});}
+// ═══ LOTTERY SHARED STATE ════════════════════════════════════
+function listenLotState(key){
+  db.ref(dateRef()+"/lottery/"+key).on("value",snap=>{
+    const d=snap.val();if(!d)return;
+    if(key==="bb")syncLotDisplay("lbb",d);
+    else if(key==="bs")syncLotDisplay("lbs",d);
+    else if(key==="bm")syncLotDisplay("lbm",d);
+  });
+}
+function pushLotState(key,data){if(!db||isRO)return;db.ref(dateRef()+"/lottery/"+key).set(data);}
+function syncLotDisplay(pfx,d){
+  if(!d.started)return;
+  // Show LIVE badge
+  const lb=document.getElementById(pfx+"-live");if(lb)lb.style.display="";
+  // Update balls if not the originator (we let local state handle own updates)
+  const prog=document.getElementById(pfx+"-prog");
+  if(d.drawn&&prog){
+    if(pfx==="lbb")prog.textContent=d.drawn.length+"/53";
+    else prog.textContent=d.drawn.length+"/"+(d.maxPos||25)+" posiciones";
+  }
+  // Update results
+  const resEl=document.getElementById(pfx+"-res");
+  if(resEl&&d.drawn&&d.drawn.length>0){
+    resEl.innerHTML=d.drawn.map((n,i)=>`<div class="lpos ${i===0?"p1":"pn"}"><span style="color:var(--muted);font-size:9px;">#${i+1}</span> <span>${n}</span></div>`).join("");
+  }
+}
+// ═══ BOLEO DE BARCO ══════════════════════════════════════════
+let lbb={pool:[],drawn:[],started:false,auto:null,isAuto:false};
+function lbbBuild(){const el=document.getElementById("lbb-balls");el.innerHTML="";for(let i=1;i<=53;i++){const d=document.createElement("div");d.className="ball idle";d.id="lbb-b-"+i;d.textContent=i;el.appendChild(d);}}
+function lbbStart(){if(!me){alert('Debes iniciar sesión para activar el sorteo.');return;}if(!lotEnabled.bb){alert('El Boleo de Barco está desactivado por el administrador.');return;}if(lbb.started)return;lbb.pool=Array.from({length:53},(_,i)=>i+1);lbb.drawn=[];lbb.started=true;lbbBuild();document.getElementById("lbb-s").disabled=true;document.getElementById("lbb-n").disabled=false;document.getElementById("lbb-cur").style.display="";document.getElementById("lbb-prog").textContent="0/53";document.getElementById("lbb-live").style.display="";addLog("Boleo de Barco iniciado","info");sendNotif("lot","🎱 Boleo de Barco — ¡Sorteo comenzando!");pushLotState("bb",{started:true,drawn:[],maxPos:53});}
+function lbbPick(){
+  if(!lbb.started||!lbb.pool.length)return;
+  const idx=Math.floor(Math.random()*lbb.pool.length);const num=lbb.pool.splice(idx,1)[0];lbb.drawn.push(num);const pos=lbb.drawn.length;
+  for(let i=1;i<=53;i++){const b=document.getElementById("lbb-b-"+i);if(!b)continue;if(lbb.drawn.slice(0,-1).includes(i))b.className="ball drawn";else if(i===num)b.className="ball current";else b.className="ball idle";}
+  document.getElementById("lbb-ball").textContent=num;document.getElementById("lbb-name").textContent=getName(num);document.getElementById("lbb-pos").textContent="Posición #"+pos+" de 53";
+  document.getElementById("lbb-res").innerHTML=lbb.drawn.map((n,i)=>`<div class="lpos ${i===0?"p1":"pn"}${i===lbb.drawn.length-1?" pnew":"'}"><span style="color:var(--muted);font-size:9px;">#${i+1}</span> <span>${n}</span></div>`).join("");
+  document.getElementById("lbb-prog").textContent=pos+"/53";
+  document.getElementById("lbb-stat").textContent="Sorteados: "+pos+" · Pendientes: "+lbb.pool.length;
+  addLog("Boleo Barco Pos.#"+pos+": #"+num+" "+getName(num).split(" ")[0],"info");
+  pushLotState("bb",{started:true,drawn:[...lbb.drawn],maxPos:53});
+  if(!lbb.pool.length)lbbFinish();
+}
+function lbbNext(){lbbPick();}
+function lbbFinish(){lbb.isAuto=false;clearInterval(lbb.auto);lbb.auto=null;document.getElementById("lbb-n").disabled=true;document.getElementById("lbb-a").textContent="Auto";for(let i=1;i<=53;i++){const b=document.getElementById("lbb-b-"+i);if(b)b.className="ball drawn";}document.getElementById("lbb-prog").textContent="53/53 ✅";addLog("Boleo de Barco COMPLETADO","info");alert("Boleo de Barco completado. Guarda el resultado en las notas del día.");}
+function lbbToggleAuto(){if(!lbb.started){lbbStart();setTimeout(lbbToggleAuto,200);return;}if(!lbb.pool.length)return;lbb.isAuto=!lbb.isAuto;const btn=document.getElementById("lbb-a");if(lbb.isAuto){btn.textContent="Pausar";document.getElementById("lbb-n").disabled=true;const spd=+document.getElementById("lbb-spd").value;lbb.auto=setInterval(()=>{if(!lbb.pool.length){lbbFinish();return;}lbbPick();},spd);}else{btn.textContent="Auto";clearInterval(lbb.auto);lbb.auto=null;document.getElementById("lbb-n").disabled=false;}}
+function lbbReset(){clearInterval(lbb.auto);lbb={pool:[],drawn:[],started:false,auto:null,isAuto:false};lbbBuild();document.getElementById("lbb-s").disabled=false;document.getElementById("lbb-n").disabled=true;document.getElementById("lbb-a").textContent="Auto";document.getElementById("lbb-res").innerHTML="<span style='font-size:10px;color:var(--muted);'>Sorteo no iniciado.</span>";document.getElementById("lbb-cur").style.display="none";document.getElementById("lbb-prog").textContent="0/53";document.getElementById("lbb-stat").textContent="";document.getElementById("lbb-live").style.display="none";}
+// ═══ GENERIC SOGA/MALETAS (shared logic) ════════════════════
+function makeLot(pfx,color,key,maxP){
+  return{pfx,color,key,maxP,selected:new Set(),pool:[],drawn:[],started:false,auto:null,isAuto:false};
+}
+let lbs=makeLot("lbs","#0F6E56","bs",25);
+let lbm=makeLot("lbm","#B7410E","bm",25);
+// Sorteo enable state — synced via Firebase
+let lotEnabled={bb:true,bs:true,bm:true};
+
+function lotBuild(lot){
+  const el=document.getElementById(lot.pfx+"-balls");el.innerHTML="";
+  for(let i=1;i<=53;i++){const d=document.createElement("div");d.className="ball idle"+(lot.started?" unselected-dim":"");d.id=lot.pfx+"-b-"+i;d.textContent=i;if(!lot.started){const sel=lot.selected.has(i);if(sel)d.className="ball selected";d.onclick=()=>lotToggle(lot,i);}el.appendChild(d);}
+  lotUpdCount(lot);
+}
+function lotToggle(lot,n){if(lot.started)return;if(lot.selected.has(n)){lot.selected.delete(n);document.getElementById(lot.pfx+"-b-"+n).className="ball idle";}else{lot.selected.add(n);document.getElementById(lot.pfx+"-b-"+n).className="ball selected";}lotUpdCount(lot);}
+function lotUpdCount(lot){const n=lot.selected.size;document.getElementById(lot.pfx+"-sel").textContent=n+" seleccionado"+(n!==1?"s":"");document.getElementById(lot.pfx+"-prog").textContent=n+" sel.";}
+function lotSelAll(pfx){const lot=pfx==="lbs"?lbs:lbm;if(lot.started)return;for(let i=1;i<=53;i++){lot.selected.add(i);const b=document.getElementById(pfx+"-b-"+i);if(b)b.className="ball selected";}lotUpdCount(lot);}
+function lotClear(pfx){const lot=pfx==="lbs"?lbs:lbm;if(lot.started)return;lot.selected.clear();for(let i=1;i<=53;i++){const b=document.getElementById(pfx+"-b-"+i);if(b)b.className="ball idle";}lotUpdCount(lot);}
+function lotRange(pfx){const lot=pfx==="lbs"?lbs:lbm;if(lot.started)return;const inp=prompt("Rango (ej: 1-25) o números separados por comas:");if(!inp)return;lot.selected.clear();if(inp.includes("-")){const[a,b]=inp.split("-").map(Number);for(let i=Math.min(a,b);i<=Math.min(Math.max(a,b),53);i++)lot.selected.add(i);}else inp.split(",").map(n=>parseInt(n.trim())).filter(n=>n>=1&&n<=53).forEach(n=>lot.selected.add(n));for(let i=1;i<=53;i++){const b=document.getElementById(pfx+"-b-"+i);if(b)b.className=lot.selected.has(i)?"ball selected":"ball idle";}lotUpdCount(lot);}
+function lotStart(lot){
+  if(lot.started)return;if(lot.selected.size<2){alert("Selecciona al menos 2 números.");return;}
+  lot.pool=[...lot.selected].sort((a,b)=>a-b);lot.drawn=[];lot.started=true;
+  for(let i=1;i<=53;i++){const b=document.getElementById(lot.pfx+"-b-"+i);if(!b)continue;b.onclick=null;b.className=lot.selected.has(i)?"ball selected":"ball idle unselected-dim";}
+  document.getElementById(lot.pfx+"-s").disabled=true;document.getElementById(lot.pfx+"-n").disabled=false;
+  document.getElementById(lot.pfx+"-cur").style.display="";document.getElementById(lot.pfx+"-live").style.display="";
+  document.getElementById(lot.pfx+"-prog").textContent="0/"+Math.min(lot.selected.size,lot.maxP);
+  const name=lot.pfx==="lbs"?"Boleo Soga de Barco":"Boleo de Maletas";
+  addLog(name+" iniciado — "+lot.selected.size+" participantes","info");
+  sendNotif("lot","🎯 "+name+" — ¡Sorteo comenzando!");
+  pushLotState(lot.key,{started:true,drawn:[],maxPos:Math.min(lot.selected.size,lot.maxP)});
+}
+function lotPick(lot){
+  if(!lot.started||!lot.pool.length||lot.drawn.length>=lot.maxP)return;
+  const idx=Math.floor(Math.random()*lot.pool.length);const num=lot.pool.splice(idx,1)[0];lot.drawn.push(num);const pos=lot.drawn.length;
+  for(const n of lot.selected){const b=document.getElementById(lot.pfx+"-b-"+n);if(!b)continue;if(lot.drawn.slice(0,-1).includes(n))b.className="ball drawn";else if(n===num)b.className="ball current";else b.className="ball selected";}
+  document.getElementById(lot.pfx+"-ball").textContent=num;document.getElementById(lot.pfx+"-name").textContent=getName(num);document.getElementById(lot.pfx+"-pos").textContent="Posición #"+pos+" de "+Math.min(lot.selected.size,lot.maxP);
+  document.getElementById(lot.pfx+"-res").innerHTML=lot.drawn.map((n,i)=>`<div class="lpos ${i===0?"p1":"pn"}${i===lot.drawn.length-1?" pnew":"'}"><span style="color:var(--muted);font-size:9px;">#${i+1}</span> <span>${n}</span></div>`).join("");
+  document.getElementById(lot.pfx+"-prog").textContent=pos+"/"+Math.min(lot.selected.size,lot.maxP);
+  document.getElementById(lot.pfx+"-stat").textContent="Posiciones: "+pos+"/"+Math.min(lot.selected.size,lot.maxP)+" · Restantes: "+lot.pool.length;
+  addLog((lot.pfx==="lbs"?"Soga":"Maletas")+" Pos.#"+pos+": #"+num+" "+getName(num).split(" ")[0],"info");
+  pushLotState(lot.key,{started:true,drawn:[...lot.drawn],maxPos:Math.min(lot.selected.size,lot.maxP)});
+  if(!lot.pool.length||lot.drawn.length>=lot.maxP)lotFinish(lot);
+}
+function lotFinish(lot){lot.isAuto=false;clearInterval(lot.auto);lot.auto=null;document.getElementById(lot.pfx+"-n").disabled=true;document.getElementById(lot.pfx+"-a").textContent="Auto";for(const n of lot.selected){const b=document.getElementById(lot.pfx+"-b-"+n);if(b)b.className="ball drawn";}document.getElementById(lot.pfx+"-prog").textContent=lot.drawn.length+"/"+Math.min(lot.selected.size,lot.maxP)+" ✅";addLog((lot.pfx==="lbs"?"Soga":"Maletas")+" COMPLETADO — "+lot.drawn.length+" posiciones","info");alert("Sorteo completado. "+lot.drawn.length+" posiciones asignadas.");}
+function lotToggleAuto(lot){if(!lot.started){lotStart(lot);setTimeout(()=>lotToggleAuto(lot),200);return;}if(!lot.pool.length||lot.drawn.length>=lot.maxP)return;lot.isAuto=!lot.isAuto;const btn=document.getElementById(lot.pfx+"-a");if(lot.isAuto){btn.textContent="Pausar";document.getElementById(lot.pfx+"-n").disabled=true;const spd=+document.getElementById(lot.pfx+"-spd").value;lot.auto=setInterval(()=>{if(!lot.pool.length||lot.drawn.length>=lot.maxP){lotFinish(lot);return;}lotPick(lot);},spd);}else{btn.textContent="Auto";clearInterval(lot.auto);lot.auto=null;document.getElementById(lot.pfx+"-n").disabled=false;}}
+function lotReset(lot){clearInterval(lot.auto);const pfx=lot.pfx,key=lot.key,maxP=lot.maxP,color=lot.color;Object.assign(lot,{selected:new Set(),pool:[],drawn:[],started:false,auto:null,isAuto:false,pfx,key,maxP,color});lotBuild(lot);document.getElementById(pfx+"-s").disabled=false;document.getElementById(pfx+"-n").disabled=true;document.getElementById(pfx+"-a").textContent="Auto";document.getElementById(pfx+"-res").innerHTML="<span style='font-size:10px;color:var(--muted);'>Selecciona números y comienza.</span>";document.getElementById(pfx+"-cur").style.display="none";document.getElementById(pfx+"-stat").textContent="";document.getElementById(pfx+"-live").style.display="none";}
+// ═══ ROTATION LOCK ═══════════════════════════════════════
+let rotLocked={reg:false,mal:false};
+
+function toggleRotLock(type){
+  if(!isAdmin()){alert('Debes iniciar sesión como administrador.');return;}
+  rotLocked[type]=!rotLocked[type];
+  db.ref('sjht/rotLocked/'+type).set(rotLocked[type]);
+  const label=type==='reg'?'Rotación Regular':'Rotación Maletas';
+  const estado=rotLocked[type]?'BLOQUEADA':'DESBLOQUEADA';
+  addAudit((rotLocked[type]?'🔒':'🔓')+' '+label+' '+estado+' por '+adminUser.name);
+  addLog((rotLocked[type]?'🔒':'🔓')+' '+label+' '+estado+' por '+adminUser.name,'admin');
+  sendNotif('rot',(rotLocked[type]?'🔒':'🔓')+' '+label+' '+estado);
+  updateRotLockUI();
+}
+
+function listenRotLock(){
+  db.ref('sjht/rotLocked').on('value',snap=>{
+    const d=snap.val()||{};
+    rotLocked.reg=d.reg===true;
+    rotLocked.mal=d.mal===true;
+    updateRotLockUI();
+  });
+}
+
+function updateRotLockUI(){
+  // Update admin toggle buttons
+  ['reg','mal'].forEach(type=>{
+    const btn=document.getElementById('rot-lock-'+type);
+    if(!btn)return;
+    if(rotLocked[type]){
+      btn.textContent='🔒 Bloqueada';
+      btn.className='pb';
+      btn.style.cssText='width:100%;font-size:11px;background:#FEF2F2;border-color:#FECACA;color:var(--red);';
+    } else {
+      btn.textContent='🔓 Desbloqueada';
+      btn.className='pb go';
+      btn.style.cssText='width:100%;font-size:11px;';
+    }
+  });
+
+  // Show/hide lock banners on pier cards
+  const regPiers=['m3','m4','po','pe'];
+  const malPiers=['m4m','pom','pem'];
+
+  regPiers.forEach(pid=>showPierLockBanner(pid,'reg'));
+  malPiers.forEach(pid=>showPierLockBanner(pid,'mal'));
+
+  // Disable/enable Turno buttons
+  regPiers.forEach(pid=>{
+    const btn=document.querySelector(`button[onclick="pierNext('${pid}')"]`);
+    if(btn){btn.disabled=rotLocked.reg;btn.title=rotLocked.reg?'Rotación bloqueada por el administrador':'';}
+  });
+  malPiers.forEach(pid=>{
+    const btn=document.querySelector(`button[onclick="pierNext('${pid}')"]`);
+    if(btn){btn.disabled=rotLocked.mal;btn.title=rotLocked.mal?'Rotación bloqueada por el administrador':'';}
+  });
+}
+
+function showPierLockBanner(pid,type){
+  const card=document.getElementById('pc-'+pid);if(!card)return;
+  const existingBanner=document.getElementById('rl-banner-'+pid);
+  if(rotLocked[type]){
+    if(!existingBanner){
+      const div=document.createElement('div');
+      div.id='rl-banner-'+pid;
+      div.style.cssText='background:#FEF2F2;border-bottom:1px solid #FECACA;padding:6px 12px;font-size:10px;font-weight:600;color:var(--red);display:flex;align-items:center;gap:5px;';
+      div.innerHTML='🔒 Rotación bloqueada por el administrador';
+      const pbody=card.querySelector('.pbody');
+      if(pbody)pbody.insertBefore(div,pbody.firstChild);
+    }
+  } else {
+    if(existingBanner)existingBanner.remove();
+  }
+}
+
+// ═══ SORTEO ENABLE/DISABLE ═══════════════════════════════
+function toggleLot(key){
+  if(!isAdmin()){alert('Debes iniciar sesión como administrador.');return;}
+  lotEnabled[key]=!lotEnabled[key];
+  db.ref('sjht/lotEnabled/'+key).set(lotEnabled[key]);
+  const label={bb:'Boleo de Barco',bs:'Boleo Soga de Barco',bm:'Boleo de Maletas'}[key];
+  addAudit((lotEnabled[key]?'✅ Activado':'🚫 Desactivado')+' sorteo: '+label+' por '+adminUser.name);
+  addLog((lotEnabled[key]?'✅':'🚫')+' Sorteo '+label+' '+(lotEnabled[key]?'activado':'desactivado')+' por '+adminUser.name,'admin');
+  sendNotif('lot',(lotEnabled[key]?'✅ Sorteo activado':'🚫 Sorteo desactivado')+': '+label);
+  updateLotToggles();
+  updateLotUI();
+}
+function listenLotEnabled(){
+  db.ref('sjht/lotEnabled').on('value',snap=>{
+    const d=snap.val()||{};
+    lotEnabled.bb=d.bb!==undefined?d.bb:true;
+    lotEnabled.bs=d.bs!==undefined?d.bs:true;
+    lotEnabled.bm=d.bm!==undefined?d.bm:true;
+    updateLotToggles();
+    updateLotUI();
+  });
+}
+function updateLotToggles(){
+  [['bb','🎱 Boleo de Barco'],['bs','🎯 Boleo Soga'],['bm','🧳 Boleo Maletas']].forEach(([key,label])=>{
+    const btn=document.getElementById('lot-toggle-'+key);
+    if(!btn)return;
+    if(lotEnabled[key]){btn.textContent='✅ Activo';btn.className='pb go';btn.style.background='';btn.style.borderColor='';}
+    else{btn.textContent='🚫 Desactivado';btn.className='pb';btn.style.background='#FEF2F2';btn.style.borderColor='#FECACA';btn.style.color='var(--red)';}
+  });
+}
+function updateLotUI(){
+  // Show/hide sorteo sections based on enabled state
+  const map={bb:'lbb',bs:'lbs',bm:'lbm'};
+  Object.entries(map).forEach(([key,pfx])=>{
+    const btns=[document.getElementById(pfx+'-s'),document.getElementById(pfx+'-n'),document.getElementById(pfx+'-a')];
+    btns.forEach(b=>{if(!b)return;if(!lotEnabled[key]){b.disabled=true;b.title='Sorteo desactivado por el administrador';}else if(b===btns[0]){b.disabled=false;}});
+    // Show disabled banner if needed
+    const existingBanner=document.getElementById('lot-disabled-'+pfx);
+    const lotBody=document.getElementById(pfx+'-s');
+    if(lotBody&&lotBody.parentElement){
+      if(!lotEnabled[key]){
+        if(!existingBanner){
+          const div=document.createElement('div');
+          div.id='lot-disabled-'+pfx;
+          div.style.cssText='background:#FEF2F2;border:1px solid #FECACA;border-radius:7px;padding:9px 12px;font-size:11px;color:var(--red);text-align:center;margin-bottom:8px;';
+          div.textContent='🚫 Este sorteo está desactivado por el administrador.';
+          lotBody.parentElement.insertBefore(div,lotBody.parentElement.firstChild);
+        }
+      } else {
+        if(existingBanner)existingBanner.remove();
+      }
+    }
+  });
+}
+
+// Wrappers for buttons
+function lbsStart(){lotStart(lbs);}function lbsNext(){lotPick(lbs);}function lbsToggleAuto(){lotToggleAuto(lbs);}function lbsReset(){lotReset(lbs);}
+function lbmStart(){lotStart(lbm);}function lbmNext(){lotPick(lbm);}function lbmToggleAuto(){lotToggleAuto(lbm);}function lbmReset(){lotReset(lbm);}
+// ═══ INIT ════════════════════════════════════════════════════
+buildPierCards(PIERS_ROT,"pgrid-rot");
+buildPierCards(PIERS_MAL,"pgrid-mal");
+ALL_PIERS.forEach(p=>renderPier(p.id));
+lbbBuild();lotBuild(lbs);lotBuild(lbm);
+initApp();
+</script>
+</body>
+</html>
